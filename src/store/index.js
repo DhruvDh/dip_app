@@ -8,16 +8,19 @@ export default new Vuex.Store({
     fileParseErrors: undefined,
     file: undefined,
     fileParseSuccessful: false,
+    fileName: undefined,
   },
   mutations: {
     ADD_FILE_PARSE_ERRORS: (state, errors) => {
       state.fileParseSuccessful = false;
+      state.fileName = undefined;
       state.fileParseErrors = errors;
     },
-    ADD_FILE: (state, file) => {
+    ADD_FILE: (state, file, fileName) => {
       state.fileParseSuccessful = true;
       state.fileParseErrors = undefined;
       state.file = file;
+      state.fileName = fileName;
     },
   },
   actions: {
