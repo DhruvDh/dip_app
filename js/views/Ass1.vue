@@ -22,7 +22,7 @@
       </b-tab-item>
 
       <b-tab-item label="Convert to ASCII Art">
-        <AsciiModal :img-width="imgWidth" />
+        <AsciiModal />
       </b-tab-item>
     </b-tabs>
 

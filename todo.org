@@ -1,8 +1,8 @@
 #+TITLE: DIP APP
 
-* [2/6] Lib.rs
+* [3/6] Lib.rs
 ** TODO Turn the file response struct to be inspectable.
-** STRT Remove the weird split thingo.
+** DONE Remove the weird split thingo.
 ** DONE Generate ASCII art
 ** DONE Do the threshold thing.
 ** TODO Render the file.

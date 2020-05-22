@@ -42,7 +42,6 @@
 
 <script>
 export default {
-  props: ["imgWidth"],
   data() {
     return {
       lightChar: "2",
@@ -51,7 +50,8 @@ export default {
       darkCharInvalid: undefined,
       threshold: "0.3",
       thresholdInvalid: undefined,
-      isActive: undefined
+      isActive: undefined,
+      imgWidth: 256
     };
   },
   methods: {
