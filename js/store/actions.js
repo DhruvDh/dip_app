@@ -84,6 +84,18 @@ const actions = {
       });
     }
   },
+  ASS1_CONVERT_GRAYSCALE_IMG(context) {
+    const { text } = context.state.ass1.file;
+    try {
+      const img = this._vm.lib.ass1ConvertToGrayscaleImg(text);
+      context.commit('ADD_GRAY_IMG_VALUES', new Uint8ClampedArray(img));
+    } catch (errors) {
+      context.commit('ADD_FILE_PARSE_ERRORS', {
+        errors,
+        type: 'ass1',
+      });
+    }
+  },
 };
 
 export default actions;

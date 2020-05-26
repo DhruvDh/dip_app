@@ -25,6 +25,7 @@
             controls-position="compact"
             controls-rounded
             class="is-fullwidth"
+            step="256"
           />
         </b-field>
       </section>

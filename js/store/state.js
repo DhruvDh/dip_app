@@ -12,6 +12,8 @@ const state = {
     csvFileUrl: undefined,
     asciiFileUrl: undefined,
     isAsciiModalActive: false,
+    grayImgValues: undefined,
+    grayImgValuesReady: false,
     imgWidth: 256,
   },
   home: {
