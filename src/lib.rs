@@ -1,3 +1,6 @@
+mod ass1;
+mod ass2;
+
 #[macro_use]
 extern crate serde_derive;
 extern crate pest;
@@ -5,23 +8,8 @@ extern crate pest;
 extern crate pest_derive;
 
 use console_error_panic_hook::set_once as set_panic_hook;
-use pest::Parser;
 use wasm_bindgen::prelude::*;
 
-#[derive(Parser)]
-#[grammar = "ass1.pest"]
-pub struct Ass1Parser;
-
-#[wasm_bindgen]
-extern "C" {
-    #[wasm_bindgen(js_namespace = console)]
-    fn log(s: &str);
-}
-
-#[wasm_bindgen]
-pub fn init() {
-    set_panic_hook();
-}
 
 // TODO: Try turning this to inspectable to get rid of JsParsing
 #[derive(Serialize)]
@@ -30,6 +18,7 @@ pub struct FileHeaderParseResponse {
     height: usize,
     width: usize,
 }
+
 
 macro_rules! unwrap {
     ($x:expr, $e:ident, $line_no:expr) => {
@@ -64,6 +53,18 @@ macro_rules! unwrap {
             }
         }
     };
+}
+
+
+#[wasm_bindgen]
+extern "C" {
+    #[wasm_bindgen(js_namespace = console)]
+    fn log(s: &str);
+}
+
+#[wasm_bindgen]
+pub fn init() {
+    set_panic_hook();
 }
 
 #[allow(unreachable_patterns)]
@@ -237,39 +238,10 @@ pub fn viewer_parse_pixels_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     }
 }
 
-pub fn ass1_parse_file(file_text: &str) -> (Vec<f64>, String) {
-    let mut array: Vec<f64> = Vec::with_capacity(256 * 256);
-    let mut errors = String::from("");
-    let file_text = file_text.replace(",", ",\n");
-
-    let mut file = match Ass1Parser::parse(Rule::ARRAY, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (Vec::new(), errors);
-        }
-    };
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap(); // get and unwrap the `file` rule; never fails
-
-    for val in file.into_inner() {
-        match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => array.push(val.as_str().parse::<f64>().unwrap()),
-            Rule::OPENING_SQUARE_BRACKET => (),
-            Rule::CLOSING_SQUARE_BRACKET => (),
-            Rule::COMMA => (),
-            Rule::EOI => (),
-            _ => unreachable!(),
-        }
-    }
-
-    (array, errors)
-}
 
 #[wasm_bindgen(js_name = ass1ParseFile)]
 pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
-    let (res, errors) = ass1_parse_file(file_text);
+    let (res, errors) = ass1::parse_file(file_text);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
 
@@ -280,48 +252,10 @@ pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
     }
 }
 
-pub fn ass1_convert_to_csv(file_text: &str, img_width: usize) -> (String, String) {
-    let mut errors = String::from("");
-    let file_text = file_text.replace(",", ",\n");
-    let mut csv = String::new();
-    let mut comma_count = 0;
-
-    let mut file = match Ass1Parser::parse(Rule::ARRAY, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (String::new(), errors);
-        }
-    };
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap(); // get and unwrap the `file` rule; never fails
-
-    for val in file.into_inner() {
-        match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => csv.push_str(val.as_str()),
-            Rule::OPENING_SQUARE_BRACKET => (),
-            Rule::CLOSING_SQUARE_BRACKET => (),
-            Rule::COMMA => {
-                comma_count = comma_count + 1;
-                if comma_count == img_width {
-                    comma_count = 0;
-                    csv.push_str(",\n");
-                } else {
-                    csv.push(',');
-                }
-            }
-            Rule::EOI => (),
-            _ => unreachable!(),
-        }
-    }
-
-    (csv, errors)
-}
 
 #[wasm_bindgen(js_name = ass1ConvertToCsv)]
 pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<String, JsValue> {
-    let (res, errors) = ass1_convert_to_csv(file_text, img_width);
+    let (res, errors) = ass1::convert_to_csv(file_text, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("#!@");
     if errors != "" {
@@ -331,56 +265,6 @@ pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<Str
     }
 }
 
-pub fn ass1_convert_to_ascii_art(
-    file_text: &str,
-    light_char: char,
-    dark_char: char,
-    threshold: f64,
-    img_width: usize,
-) -> (String, String) {
-    log(format!("{}", img_width).as_str());
-    let mut array: String = String::from("");
-    let mut counter = 0;
-    let mut errors = String::from("");
-    let file_text = file_text.replace(",", ",\n");
-
-    let mut file = match Ass1Parser::parse(Rule::ARRAY, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (String::new(), errors);
-        }
-    };
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap(); // get and unwrap the `file` rule; never fails
-
-    for val in file.into_inner() {
-        match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => {
-                let num = val.as_str().parse::<f64>().unwrap();
-                if num <= threshold {
-                    array.push(light_char);
-                } else {
-                    array.push(dark_char);
-                }
-
-                counter = counter + 1;
-                if counter == img_width {
-                    counter = 0;
-                    array.push('\n');
-                }
-            }
-            Rule::OPENING_SQUARE_BRACKET => (),
-            Rule::CLOSING_SQUARE_BRACKET => (),
-            Rule::COMMA => (),
-            Rule::EOI => (),
-            _ => unreachable!(),
-        }
-    }
-
-    (array, errors)
-}
 
 #[wasm_bindgen(js_name = ass1ConvertToAsciiArt)]
 pub fn ass1_convert_to_ascii_art_json(
@@ -391,7 +275,7 @@ pub fn ass1_convert_to_ascii_art_json(
     img_width: usize,
 ) -> Result<String, JsValue> {
     let (res, errors) =
-        ass1_convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
+        ass1::convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
     if errors != "" {
@@ -401,71 +285,27 @@ pub fn ass1_convert_to_ascii_art_json(
     }
 }
 
-pub fn ass1_convert_to_grayscale_img(file_text: &str) -> (Vec<u8>, String) {
-    let mut errors = String::from("");
-    let file_text = file_text.replace(",", ",\n");
-    let mut img = Vec::new();
-
-    let mut file = match Ass1Parser::parse(Rule::ARRAY, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (Vec::new(), errors);
-        }
-    };
-
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap(); // get and unwrap the `file` rule; never fails
-
-    let mut max = std::f64::MIN;
-    let mut min = std::f64::MAX;
-
-    for val in file.into_inner() {
-        match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => {
-                let num = val.as_str().parse::<f64>().unwrap();
-                img.push(num);
-                if num > max {
-                    max = num;
-                }
-
-                if num < min {
-                    min = num;
-                }
-            }
-            Rule::OPENING_SQUARE_BRACKET => (),
-            Rule::CLOSING_SQUARE_BRACKET => (),
-            Rule::COMMA => {}
-            Rule::EOI => (),
-            _ => unreachable!(),
-        }
-    }
-
-    let (new_max, new_min) = (255u8, 0u8);
-
-    let m = (new_max - new_min) as f64 / (max - min);
-    let b = (new_min as f64 - m) * min;
-
-    let mut new_img: Vec<u8> = vec![];
-
-    for x in img {
-        new_img.push(255 - (m * (x as f64) + b) as u8);
-        new_img.push(255 - (m * (x as f64) + b) as u8);
-        new_img.push(255 - (m * (x as f64) + b) as u8);
-        new_img.push(255);
-    }
-
-    (new_img, errors)
-}
 
 #[wasm_bindgen(js_name = ass1ConvertToGrayscaleImg)]
 pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
-    let (res, errors) = ass1_convert_to_grayscale_img(file_text);
+    let (res, errors) = ass1::convert_to_grayscale_img(file_text);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
     if errors != "" {
         Err(JsValue::from(err))
+    } else {
+        Ok(res)
+    }
+}
+
+
+
+#[wasm_bindgen(js_name = ass2ParseFile)]
+pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
+    let (res, errors) = ass2::parse_file(file_text);
+
+    if errors != "" {
+        Err(JsValue::from(errors))
     } else {
         Ok(res)
     }
