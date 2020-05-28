@@ -1,6 +1,3 @@
-mod ass1;
-mod ass2;
-
 #[macro_use]
 extern crate serde_derive;
 extern crate pest;
@@ -8,8 +5,8 @@ extern crate pest;
 extern crate pest_derive;
 
 use console_error_panic_hook::set_once as set_panic_hook;
+use pest::Parser;
 use wasm_bindgen::prelude::*;
-
 
 // TODO: Try turning this to inspectable to get rid of JsParsing
 #[derive(Serialize)]
@@ -18,7 +15,6 @@ pub struct FileHeaderParseResponse {
     height: usize,
     width: usize,
 }
-
 
 macro_rules! unwrap {
     ($x:expr, $e:ident, $line_no:expr) => {
@@ -55,7 +51,6 @@ macro_rules! unwrap {
     };
 }
 
-
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -65,6 +60,187 @@ extern "C" {
 #[wasm_bindgen]
 pub fn init() {
     set_panic_hook();
+}
+
+#[derive(Parser)]
+#[grammar = "parse.pest"]
+pub struct FileParser;
+
+pub fn ass1_parse_file(file_text: &str) -> (Vec<f64>, String) {
+    let mut array: Vec<f64> = Vec::with_capacity(256 * 256);
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => array.push(val.as_str().parse::<f64>().unwrap()),
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (array, errors)
+}
+
+pub fn ass1_convert_to_csv(file_text: &str, img_width: usize) -> (String, String) {
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+    let mut csv = String::new();
+    let mut comma_count = 0;
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (String::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => csv.push_str(val.as_str()),
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => {
+                comma_count = comma_count + 1;
+                if comma_count == img_width {
+                    comma_count = 0;
+                    csv.push_str(",\n");
+                } else {
+                    csv.push(',');
+                }
+            }
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (csv, errors)
+}
+
+pub fn ass1_convert_to_ascii_art(
+    file_text: &str,
+    light_char: char,
+    dark_char: char,
+    threshold: f64,
+    img_width: usize,
+) -> (String, String) {
+    let mut array: String = String::from("");
+    let mut counter = 0;
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (String::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => {
+                let num = val.as_str().parse::<f64>().unwrap();
+                if num <= threshold {
+                    array.push(light_char);
+                } else {
+                    array.push(dark_char);
+                }
+
+                counter = counter + 1;
+                if counter == img_width {
+                    counter = 0;
+                    array.push('\n');
+                }
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (array, errors)
+}
+
+pub fn ass1_convert_to_grayscale_img(file_text: &str) -> (Vec<u8>, String) {
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+    let mut img = Vec::new();
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    let mut max = std::f64::MIN;
+    let mut min = std::f64::MAX;
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => {
+                let num = val.as_str().parse::<f64>().unwrap();
+                img.push(num);
+                if num > max {
+                    max = num;
+                }
+
+                if num < min {
+                    min = num;
+                }
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => {}
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    let (new_max, new_min) = (255u8, 0u8);
+
+    let m = (new_max - new_min) as f64 / (max - min);
+    let b = (new_min as f64 - m) * min;
+
+    let mut new_img: Vec<u8> = vec![];
+
+    for x in img {
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255);
+    }
+
+    (new_img, errors)
 }
 
 #[allow(unreachable_patterns)]
@@ -238,10 +414,9 @@ pub fn viewer_parse_pixels_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     }
 }
 
-
 #[wasm_bindgen(js_name = ass1ParseFile)]
 pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
-    let (res, errors) = ass1::parse_file(file_text);
+    let (res, errors) = ass1_parse_file(file_text);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
 
@@ -252,10 +427,9 @@ pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
     }
 }
 
-
 #[wasm_bindgen(js_name = ass1ConvertToCsv)]
 pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<String, JsValue> {
-    let (res, errors) = ass1::convert_to_csv(file_text, img_width);
+    let (res, errors) = ass1_convert_to_csv(file_text, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("#!@");
     if errors != "" {
@@ -264,7 +438,6 @@ pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<Str
         Ok(res)
     }
 }
-
 
 #[wasm_bindgen(js_name = ass1ConvertToAsciiArt)]
 pub fn ass1_convert_to_ascii_art_json(
@@ -275,7 +448,7 @@ pub fn ass1_convert_to_ascii_art_json(
     img_width: usize,
 ) -> Result<String, JsValue> {
     let (res, errors) =
-        ass1::convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
+        ass1_convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
     if errors != "" {
@@ -285,28 +458,135 @@ pub fn ass1_convert_to_ascii_art_json(
     }
 }
 
+pub fn ass2_parse_header(file_text: &str) -> (FileHeaderParseResponse, String) {
+    let mut errors = String::from("");
+    let mut header = FileHeaderParseResponse {
+        file_type: String::new(),
+        height: 0,
+        width: 0,
+    };
+
+    let mut file = match FileParser::parse(Rule::HEADER, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (header, errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap();
+
+    for val in file.into_inner() {
+        log(val.as_str());
+
+        match val.as_rule() {
+            Rule::IMAGE_FILE_TYPE => {}
+            Rule::IMAGE_HEIGHT => {
+                header.height = val.as_str().trim().parse::<usize>().unwrap();
+            }
+            Rule::IMAGE_WIDTH => {
+                log(val.as_str());
+                header.width = val.as_str().trim().parse::<usize>().unwrap();
+            }
+            _ => unreachable!(),
+        }
+    }
+
+    (header, errors)
+}
+
+pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
+    let mut errors = String::from("");
+
+    let mut file = match FileParser::parse(Rule::IMAGE_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    let mut img_height = 0;
+    let mut img_width = 0;
+
+    let mut reds: Vec<u8> = vec![];
+    let mut greens: Vec<u8> = vec![];
+    let mut blues: Vec<u8> = vec![];
+
+    let mut greys: Vec<u8> = vec![];
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::IMAGE_FILE_TYPE => {}
+            Rule::IMAGE_HEIGHT => {
+                img_height = val.as_str().parse().unwrap();
+            }
+            Rule::IMAGE_WIDTH => {
+                img_width = val.as_str().parse().unwrap();
+            }
+            Rule::RED_COMPONENT => {
+                reds.push(val.as_str().parse::<u8>().unwrap());
+            }
+            Rule::BLUE_COMPONENT => {
+                blues.push(val.as_str().parse::<u8>().unwrap());
+            }
+            Rule::GREEN_COMPONENT => {
+                greens.push(val.as_str().parse::<u8>().unwrap());
+            }
+            Rule::GREY_COMPONENT => {
+                greys.push(val.as_str().parse().unwrap());
+            }
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    let mut array: Vec<u8> = Vec::with_capacity(img_height * img_width * 3);
+
+    let all_colors = (reds.iter().zip(greens.iter())).zip(blues.iter());
+
+    for ((r, g), b) in all_colors {
+        array.push(*r);
+        array.push(*g);
+        array.push(*b);
+    }
+
+    (array, errors)
+}
 
 #[wasm_bindgen(js_name = ass1ConvertToGrayscaleImg)]
 pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
-    let (res, errors) = ass1::convert_to_grayscale_img(file_text);
-
-    let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
-    if errors != "" {
-        Err(JsValue::from(err))
-    } else {
-        Ok(res)
-    }
-}
-
-
-
-#[wasm_bindgen(js_name = ass2ParseFile)]
-pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
-    let (res, errors) = ass2::parse_file(file_text);
+    let (res, errors) = ass1_convert_to_grayscale_img(file_text);
 
     if errors != "" {
         Err(JsValue::from(errors))
     } else {
         Ok(res)
+    }
+}
+
+#[wasm_bindgen(js_name = ass2ParseFile)]
+pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
+    let (res, errors) = ass2_parse_file(file_text);
+
+    if errors != "" {
+        Err(JsValue::from(errors))
+    } else {
+        Ok(res)
+    }
+}
+
+#[wasm_bindgen(js_name = ass2ParseHeader)]
+pub fn ass2_parse_header_json(file_text: &str) -> Result<JsValue, JsValue> {
+    let (res, errors) = ass2_parse_header(file_text);
+
+    if errors.len() != 0 {
+        Err(JsValue::from(errors))
+    } else {
+        Ok(JsValue::from_serde(&res).unwrap())
     }
 }

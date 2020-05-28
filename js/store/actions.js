@@ -9,6 +9,7 @@ const actions = {
         const text = event.target.result.trim();
         try {
           const header = this._vm.lib.viewerParseHeader(text);
+          console.log(this._vm.lib.ass2ParseHeader(text));
           header.pixels = new Uint8ClampedArray(this._vm.lib.viewerParsePixels(text));
           header.name = file.name;
           context.commit('ADD_FILE', {
