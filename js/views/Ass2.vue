@@ -20,9 +20,9 @@
           :disabled="convIsDisabled"
           class="is-primary"
           style="margin-top: 1.25rem;"
-          @click="convToCsvClick"
+          @click="downloadPartA"
         >
-          Convert
+          Download as text file
         </b-button>
       </b-tab-item>
 
@@ -34,6 +34,14 @@
           :file-obj="$store.state.ass2.partB"
           mount-div="viewerDivB"
         />
+        <b-button
+          :disabled="convIsDisabled"
+          class="is-primary"
+          style="margin-top: 1.25rem;"
+          @click="downloadPartB"
+        >
+          Download as text file
+        </b-button>
       </b-tab-item>
 
       <b-tab-item
@@ -47,9 +55,10 @@
         <b-button
           :disabled="convIsDisabled"
           class="is-primary"
-          @click="convToGrayImgClick"
+          style="margin-top: 1.25rem;"
+          @click="downloadPartC"
         >
-          Convert
+          Download as text file
         </b-button>
       </b-tab-item>
     </b-tabs>
@@ -143,46 +152,26 @@ export default {
       // Prevent default behavior (Prevent file from being opened)
       ev.preventDefault();
     },
-    convToCsvClick() {
-      this.$store.dispatch('ASS1_CONVERT_TO_CSV', {
-        imgWidth: this.$store.state.ass1.imgWidth,
-      });
-
+    downloadPartA() {
       const a = document.createElement('a');
-      a.setAttribute('href', this.$store.state.ass1.csvFileUrl);
-      a.setAttribute(
-        'download',
-        this.$store.state.ass1.file.name.replace('.txt', '.csv'),
-      );
+      a.setAttribute('href', this.$store.state.ass2.partA.file.fileUrl);
+      a.setAttribute('download', this.$store.state.ass2.partA.file.name);
       a.click();
       a.remove();
     },
-    convToAsciiClick() {
-      this.$store.commit('TOGGLE_ASCII_MODAL_ON');
+    downloadPartB() {
+      const a = document.createElement('a');
+      a.setAttribute('href', this.$store.state.ass2.partB.file.fileUrl);
+      a.setAttribute('download', this.$store.state.ass2.partB.file.name);
+      a.click();
+      a.remove();
     },
-    convToGrayImgClick() {
-      this.$store.dispatch('ASS1_CONVERT_GRAYSCALE_IMG');
-      const viewerDiv = document.getElementById('viewerDiv');
-
-      while (viewerDiv.lastElementChild) {
-        viewerDiv.removeChild(viewerDiv.lastElementChild);
-      }
-
-      const length = this.grayImgValues.length / 4;
-      const height = length / this.imgWidth;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = this.imgWidth;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-
-      ctx.putImageData(
-        new ImageData(this.grayImgValues, this.imgWidth, height),
-        0,
-        0,
-      );
-
-      viewerDiv.appendChild(canvas);
+    downloadPartC() {
+      const a = document.createElement('a');
+      a.setAttribute('href', this.$store.state.ass2.partC.file.fileUrl);
+      a.setAttribute('download', this.$store.state.ass2.partC.file.name);
+      a.click();
+      a.remove();
     },
   },
 };
