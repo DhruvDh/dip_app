@@ -84,7 +84,7 @@ pub fn ass1_parse_file(file_text: &str) -> (Vec<f64>, String) {
 
     for val in file.into_inner() {
         match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => array.push(val.as_str().parse::<f64>().unwrap()),
+            Rule::FLOATING_POINT_NUMBER => array.push(val.as_str().trim().parse::<f64>().unwrap()),
             Rule::OPENING_SQUARE_BRACKET => (),
             Rule::CLOSING_SQUARE_BRACKET => (),
             Rule::COMMA => (),
@@ -115,7 +115,7 @@ pub fn ass1_convert_to_csv(file_text: &str, img_width: usize) -> (String, String
 
     for val in file.into_inner() {
         match val.as_rule() {
-            Rule::FLOATING_POINT_NUMBER => csv.push_str(val.as_str()),
+            Rule::FLOATING_POINT_NUMBER => csv.push_str(val.as_str().trim()),
             Rule::OPENING_SQUARE_BRACKET => (),
             Rule::CLOSING_SQUARE_BRACKET => (),
             Rule::COMMA => {
@@ -161,7 +161,7 @@ pub fn ass1_convert_to_ascii_art(
     for val in file.into_inner() {
         match val.as_rule() {
             Rule::FLOATING_POINT_NUMBER => {
-                let num = val.as_str().parse::<f64>().unwrap();
+                let num = val.as_str().trim().parse::<f64>().unwrap();
                 if num <= threshold {
                     array.push(light_char);
                 } else {
@@ -208,7 +208,7 @@ pub fn ass1_convert_to_grayscale_img(file_text: &str) -> (Vec<u8>, String) {
     for val in file.into_inner() {
         match val.as_rule() {
             Rule::FLOATING_POINT_NUMBER => {
-                let num = val.as_str().parse::<f64>().unwrap();
+                let num = val.as_str().trim().parse::<f64>().unwrap();
                 img.push(num);
                 if num > max {
                     max = num;
@@ -458,106 +458,6 @@ pub fn ass1_convert_to_ascii_art_json(
     }
 }
 
-pub fn ass2_parse_header(file_text: &str) -> (FileHeaderParseResponse, String) {
-    let mut errors = String::from("");
-    let mut header = FileHeaderParseResponse {
-        file_type: String::new(),
-        height: 0,
-        width: 0,
-    };
-
-    let mut file = match FileParser::parse(Rule::HEADER, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (header, errors);
-        }
-    };
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap();
-
-    for val in file.into_inner() {
-        log(val.as_str());
-
-        match val.as_rule() {
-            Rule::IMAGE_FILE_TYPE => {}
-            Rule::IMAGE_HEIGHT => {
-                header.height = val.as_str().trim().parse::<usize>().unwrap();
-            }
-            Rule::IMAGE_WIDTH => {
-                log(val.as_str());
-                header.width = val.as_str().trim().parse::<usize>().unwrap();
-            }
-            _ => unreachable!(),
-        }
-    }
-
-    (header, errors)
-}
-
-pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
-    let mut errors = String::from("");
-
-    let mut file = match FileParser::parse(Rule::IMAGE_FILE, &file_text) {
-        Ok(val) => val,
-        Err(err) => {
-            errors = format!("{}", err);
-            return (Vec::new(), errors);
-        }
-    };
-    let file = file // unwrap the parse result
-        .next()
-        .unwrap(); // get and unwrap the `file` rule; never fails
-
-    let mut img_height = 0;
-    let mut img_width = 0;
-
-    let mut reds: Vec<u8> = vec![];
-    let mut greens: Vec<u8> = vec![];
-    let mut blues: Vec<u8> = vec![];
-
-    let mut greys: Vec<u8> = vec![];
-
-    for val in file.into_inner() {
-        match val.as_rule() {
-            Rule::IMAGE_FILE_TYPE => {}
-            Rule::IMAGE_HEIGHT => {
-                img_height = val.as_str().parse().unwrap();
-            }
-            Rule::IMAGE_WIDTH => {
-                img_width = val.as_str().parse().unwrap();
-            }
-            Rule::RED_COMPONENT => {
-                reds.push(val.as_str().parse::<u8>().unwrap());
-            }
-            Rule::BLUE_COMPONENT => {
-                blues.push(val.as_str().parse::<u8>().unwrap());
-            }
-            Rule::GREEN_COMPONENT => {
-                greens.push(val.as_str().parse::<u8>().unwrap());
-            }
-            Rule::GREY_COMPONENT => {
-                greys.push(val.as_str().parse().unwrap());
-            }
-            Rule::EOI => (),
-            _ => unreachable!(),
-        }
-    }
-
-    let mut array: Vec<u8> = Vec::with_capacity(img_height * img_width * 3);
-
-    let all_colors = (reds.iter().zip(greens.iter())).zip(blues.iter());
-
-    for ((r, g), b) in all_colors {
-        array.push(*r);
-        array.push(*g);
-        array.push(*b);
-    }
-
-    (array, errors)
-}
-
 #[wasm_bindgen(js_name = ass1ConvertToGrayscaleImg)]
 pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     let (res, errors) = ass1_convert_to_grayscale_img(file_text);
@@ -569,6 +469,40 @@ pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, Js
     }
 }
 
+pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
+    let mut array: Vec<u8> = Vec::with_capacity(256 * 256);
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_2_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::WHOLE_NUMBER => {
+                let num = val.as_str().trim().parse::<usize>().unwrap();
+                let num = if num > 255 { 255u8 } else { num as u8 };
+                array.push(num)
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (array, errors)
+}
+
 #[wasm_bindgen(js_name = ass2ParseFile)]
 pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     let (res, errors) = ass2_parse_file(file_text);
@@ -577,16 +511,5 @@ pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
         Err(JsValue::from(errors))
     } else {
         Ok(res)
-    }
-}
-
-#[wasm_bindgen(js_name = ass2ParseHeader)]
-pub fn ass2_parse_header_json(file_text: &str) -> Result<JsValue, JsValue> {
-    let (res, errors) = ass2_parse_header(file_text);
-
-    if errors.len() != 0 {
-        Err(JsValue::from(errors))
-    } else {
-        Ok(JsValue::from_serde(&res).unwrap())
     }
 }
