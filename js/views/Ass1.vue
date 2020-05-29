@@ -60,30 +60,34 @@
           </b-button>
         </div>
         <div
-          v-else
+          id="viewerDiv"
           class="viewerDiv"
         />
       </b-tab-item>
     </b-tabs>
 
-    <ImageViewer />
-    <Log :page-name="pageName" />
+    <Log
+      :p-errors="$store.state.ass1.fileObj.fileParseErrors"
+      :p-success="$store.state.ass1.fileObj.fileParseSuccessful"
+      :f-name="fileName"
+    />
     <FilePicker :page-name="pageName" />
+    <MdPage />
   </section>
 </template>
 
 <script>
-import ImageViewer from '../components/Ass1/Renderer.vue';
 import AsciiModal from '../components/Ass1/AsciiModal.vue';
 import FilePicker from '../components/FilePicker.vue';
 import Log from '../components/Log.vue';
+import MdPage from '../md/Ass1.vue';
 
 export default {
   components: {
-    ImageViewer,
     FilePicker,
     Log,
     AsciiModal,
+    MdPage,
   },
   data() {
     return {
@@ -95,7 +99,7 @@ export default {
       return this.$store.state.pageNameRev[this.$store.state.route.name];
     },
     convIsDisabled() {
-      return !this.$store.state.ass1.fileParseSuccessful;
+      return !this.$store.state.ass1.fileObj.fileParseSuccessful;
     },
     grayImgValuesNotReady() {
       return !this.$store.state.ass1.grayImgValuesReady;
@@ -121,7 +125,13 @@ export default {
       return false;
     },
     parseSuccessful() {
-      return this.$store.state.ass1.fileParseSuccessful;
+      return this.$store.state.ass1.fileObj.fileParseSuccessful;
+    },
+    fileName() {
+      if (this.$store.state.ass1.fileObj.file) {
+        return this.$store.state.ass1.fileObj.file.name;
+      }
+      return '';
     },
   },
   watch: {
@@ -174,7 +184,7 @@ export default {
       a.setAttribute('href', this.$store.state.ass1.csvFileUrl);
       a.setAttribute(
         'download',
-        this.$store.state.ass1.file.name.replace('.txt', '.csv'),
+        this.$store.state.ass1.fileObj.file.name.replace('.txt', '.csv'),
       );
       a.click();
       a.remove();

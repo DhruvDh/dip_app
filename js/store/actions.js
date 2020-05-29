@@ -47,7 +47,7 @@ const actions = {
   ASS1_CONVERT_TO_ASCII(context, {
     lightChar, darkChar, threshold, imgWidth,
   }) {
-    const { text } = context.state.ass1.file;
+    const { text } = context.state.ass1.fileObj.file;
     try {
       const asciiValues = this._vm.lib.ass1ConvertToAsciiArt(text, lightChar, darkChar, threshold, imgWidth);
       const { asciiFileUrl } = context.state.ass1;
@@ -66,7 +66,7 @@ const actions = {
     }
   },
   ASS1_CONVERT_TO_CSV(context, { imgWidth }) {
-    const { text } = context.state.ass1.file;
+    const { text } = context.state.ass1.fileObj.file;
     try {
       const csvValues = this._vm.lib.ass1ConvertToCsv(text, imgWidth);
       const { csvFileUrl } = context.state.ass1;
@@ -85,7 +85,7 @@ const actions = {
     }
   },
   ASS1_CONVERT_GRAYSCALE_IMG(context) {
-    const { text } = context.state.ass1.file;
+    const { text } = context.state.ass1.fileObj.file;
     try {
       const img = this._vm.lib.ass1ConvertToGrayscaleImg(text);
       context.commit('ADD_GRAY_IMG_VALUES', new Uint8ClampedArray(img));

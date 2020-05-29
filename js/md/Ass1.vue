@@ -1,7 +1,7 @@
 
 <template>
-  <div class="markdown-body">
-    <h1>Assignment 1</h1>
+  <div class="markdown-body container" style="margin-top: 1rem">
+    <h2> Table of Contents </h2>
     <ul>
       <li>
         <a href="#assignment-1">Assignment 1</a>
@@ -185,5 +185,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "@primer/css/markdown/index.scss";
+  @import "@primer/css/markdown/index.scss";
+
+  code {
+    color: #000000;
+  }
 </style>
