@@ -527,16 +527,16 @@ pub fn ass2_do_part_a(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
 
     let mut text = String::new();
     text.push_str("RGB\n");
-    text.push_str(format!("{}\n", array.len() / (img_width * 1)).as_str());
+    text.push_str(format!("{}\n", array.len() / img_width).as_str());
     text.push_str(format!("{}\n", img_width).as_str());
 
     enum Row {
         BlueGreen,
-        GreenRed
+        GreenRed,
     };
 
     let mut row = Row::BlueGreen;
-    
+
     for line in array.chunks_exact(img_width) {
         match row {
             Row::BlueGreen => {
@@ -544,44 +544,183 @@ pub fn ass2_do_part_a(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
                 for elem in line {
                     match color {
                         Color::Blue => {
-                            text.push_str(
-                                format!("0 0 {}\n", *elem).as_str()
-                            );
+                            text.push_str(format!("0 0 {}\n", *elem).as_str());
                             color = Color::Green;
-                        },
+                        }
                         Color::Green => {
-                            text.push_str(
-                                format!("0 {} 0\n", *elem).as_str()
-                            );
+                            text.push_str(format!("0 {} 0\n", *elem).as_str());
                             color = Color::Blue;
-                        },
-                        _ => unreachable!()
-                    }      
+                        }
+                        _ => unreachable!(),
+                    }
                 }
                 row = Row::GreenRed;
-            },
+            }
             Row::GreenRed => {
                 let mut color = Color::Green;
                 for elem in line {
                     match color {
                         Color::Green => {
-                            text.push_str(
-                                format!("0 {} 0\n", *elem).as_str()
-                            );
+                            text.push_str(format!("0 {} 0\n", *elem).as_str());
                             color = Color::Red;
-                        },
+                        }
                         Color::Red => {
-                            text.push_str(
-                                format!("{} 0 0\n", *elem).as_str()
-                            );
+                            text.push_str(format!("{} 0 0\n", *elem).as_str());
                             color = Color::Green;
-                        },
-                        _ => unreachable!()
-                    }      
+                        }
+                        _ => unreachable!(),
+                    }
                 }
                 row = Row::BlueGreen;
             }
         }
+    }
+
+    Ok(JsValue::from(text))
+}
+
+#[wasm_bindgen(js_name = ass2DoPartB)]
+pub fn ass2_do_part_b(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+    let img_height = array.len() / img_width;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", img_height / 2).as_str());
+    text.push_str(format!("{}\n", img_width / 2).as_str());
+
+    let mut stacked_array: Vec<Vec<u8>> = Vec::with_capacity(img_width);
+
+    for i in 0..img_height {
+        let mut current_row: Vec<u8> = Vec::with_capacity(img_width);
+        for j in 0..img_width {
+            current_row.push(array[i * img_height + j]);
+        }
+        stacked_array.push(current_row);
+    }
+
+    let stacked_array = stacked_array;
+
+    for i in (0..img_height).step_by(2) {
+        let row_1 = &stacked_array[i];
+        let row_2 = &stacked_array[i + 1];
+
+        for j in (0..img_width).step_by(2) {
+            let blue = row_1[j];
+            let green_1 = row_1[j + 1];
+            let green_2 = row_2[j];
+            let red = row_2[j + 1];
+
+            let green = (green_1 + green_2) / 2;
+
+            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+        }
+    }
+
+    Ok(JsValue::from(text))
+}
+
+#[wasm_bindgen(js_name = ass2DoPartC)]
+pub fn ass2_do_part_c(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+    let img_height = array.len() / img_width;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", img_height - 1).as_str());
+    text.push_str(format!("{}\n", img_width - 1).as_str());
+
+    enum RowType {
+        A,
+        B,
+    }
+
+    enum GridType {
+        BGGR,
+        GBRG,
+        GRBG,
+        RGGB,
+    };
+
+    let mut row = RowType::A;
+
+    macro_rules! index {
+        ($x:expr, $y:expr) => {
+            (($x * img_width) + $y) as usize
+        };
+    };
+
+    for i in 0..img_height - 1 {
+        match row {
+            RowType::A => {
+                let mut grid = GridType::BGGR;
+
+                for j in 0..img_width - 1 {
+                    match grid {
+                        GridType::BGGR => {
+                            let blue = array[index!(i, j)];
+                            let green1 = array[index!(i, j + 1)] as usize;
+                            let green2 = array[index!(i + 1, j)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i + 1, j + 1)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::GBRG;
+                        }
+                        GridType::GBRG => {
+                            let blue = array[index!(i, j + 1)];
+                            let green1 = array[index!(i, j)] as usize;
+                            let green2 = array[index!(i + 1, j + 1)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i + 1, j)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::BGGR;
+                        }
+                        GridType::GRBG => panic!("I should not be at this RowType (GRBG)"),
+                        GridType::RGGB => panic!("I should not be at this RowType (RGGB)"),
+                    };
+                }
+
+                row = RowType::B;
+            }
+            RowType::B => {
+                let mut grid = GridType::GRBG;
+
+                for j in 0..img_width - 1 {
+                    match grid {
+                        GridType::BGGR => panic!("I should not bee at this RowType (BGGR)"),
+                        GridType::GBRG => panic!("I should not be at this RowType (GBRG)"),
+                        GridType::GRBG => {
+                            let blue = array[index!(i + 1, j)];
+                            let green1 = array[index!(i, j)] as usize;
+                            let green2 = array[index!(i + 1, j + 1)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i, j + 1)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::RGGB;
+                        }
+                        GridType::RGGB => {
+                            let blue = array[index!(i + 1, j + 1)];
+                            let green1 = array[index!(i, j + 1)] as usize;
+                            let green2 = array[index!(i + 1, j)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i, j)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::GRBG;
+                        }
+                    };
+                }
+
+                row = RowType::A;
+            }
+        };
     }
 
     Ok(JsValue::from(text))
