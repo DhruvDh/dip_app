@@ -1,7 +1,7 @@
 <template>
   <section class="section is-full">
     <div class="column is-narrow is-size-2 has-text-centered">
-      Assignment 1
+      Assignment 2
     </div>
 
     <b-tabs
@@ -9,19 +9,13 @@
       position="is-centered"
     >
       <b-tab-item
-        label="Convert to a CSV file"
+        label="Part A"
         class="menuItem"
       >
-        <b-field label="Image Width">
-          <b-numberinput
-            v-model="imgWidth"
-            controls-position="compact"
-            controls-rounded
-            class="is-fullwidth"
-            :disabled="convIsDisabled"
-            step="256"
-          />
-        </b-field>
+        <ImageViewer
+          :file-obj="$store.state.ass2.partA"
+          mount-div="viewerDivA"
+        />
         <b-button
           :disabled="convIsDisabled"
           class="is-primary"
@@ -32,37 +26,31 @@
         </b-button>
       </b-tab-item>
 
-      <b-tab-item label="Convert to ASCII Art">
-        <AsciiModal />
+      <b-tab-item
+        label="Part B"
+        class="menuItem"
+      >
+        <ImageViewer
+          :file-obj="$store.state.ass2.partB"
+          mount-div="viewerDivB"
+        />
       </b-tab-item>
 
       <b-tab-item
-        label="Convert to Grayscale Image"
+        label="Part C"
         class="menuItem"
       >
-        <div v-if="grayImgValuesNotReady">
-          <b-field label="Image Width">
-            <b-numberinput
-              v-model="imgWidth"
-              controls-position="compact"
-              controls-rounded
-              class="is-fullwidth"
-              :disabled="convIsDisabled"
-              step="256"
-            />
-          </b-field>
-          <b-button
-            :disabled="convIsDisabled"
-            class="is-primary"
-            @click="convToGrayImgClick"
-          >
-            Convert
-          </b-button>
-        </div>
-        <div
-          v-else
-          class="viewerDiv"
+        <ImageViewer
+          :file-obj="$store.state.ass2.partC"
+          mount-div="viewerDivC"
         />
+        <b-button
+          :disabled="convIsDisabled"
+          class="is-primary"
+          @click="convToGrayImgClick"
+        >
+          Convert
+        </b-button>
       </b-tab-item>
     </b-tabs>
     <ImageViewer
@@ -81,7 +69,6 @@
 
 <script>
 import ImageViewer from '../components/ImageViewer.vue';
-import AsciiModal from '../components/Ass1/AsciiModal.vue';
 import FilePicker from '../components/FilePicker.vue';
 import Log from '../components/Log.vue';
 import MdPage from '../md/Ass2.vue';
@@ -91,7 +78,6 @@ export default {
     ImageViewer,
     FilePicker,
     Log,
-    AsciiModal,
     MdPage,
   },
   data() {
@@ -104,37 +90,14 @@ export default {
       return this.$store.state.pageNameRev[this.$store.state.route.name];
     },
     convIsDisabled() {
-      return !this.$store.state.ass1.fileParseSuccessful;
-    },
-    grayImgValuesNotReady() {
-      return !this.$store.state.ass1.grayImgValuesReady;
-    },
-    grayImgValues() {
-      return this.$store.state.ass1.grayImgValues;
-    },
-    csvFileName() {
-      if (this.$store.state.ass1.file) {
-        let filename = this.$store.state.ass1.file.name;
-        filename = filename.replace('txt', 'csv');
-        return filename;
-      }
-
-      return false;
-    },
-    asciiFileName() {
-      if (this.$store.state.ass1.file) {
-        let filename = this.$store.state.ass1.file.name;
-        filename = filename.replace('.txt', '_ascii_art.txt');
-        return filename;
-      }
-      return false;
+      return !this.$store.state.ass2.fileParseSuccessful;
     },
     parseSuccessful() {
-      return this.$store.state.ass1.fileParseSuccessful;
+      return this.$store.state.ass2.fileParseSuccessful;
     },
     fileName() {
-      if (this.$store.state.ass2.file) {
-        return this.$store.state.ass2.file.name;
+      if (this.$store.state.ass2.fileParseSuccessful) {
+        return `${this.$store.state.ass2.partA.name}, ${this.$store.state.ass2.partB.name}, and ${this.$store.state.ass2.partC.name}`;
       }
       return '';
     },

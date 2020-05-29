@@ -20,8 +20,10 @@ const state = {
   },
   ass2: {
     fileParseErrors: undefined,
-    file: undefined,
     fileParseSuccessful: false,
+    partA: undefined,
+    partB: undefined,
+    partC: undefined,
   },
   home: {
     fileParseErrors: undefined,

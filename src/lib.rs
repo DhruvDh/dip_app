@@ -611,7 +611,8 @@ pub fn ass2_do_part_b(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
             let green_2 = row_2[j];
             let red = row_2[j + 1];
 
-            let green = (green_1 + green_2) / 2;
+            let green: usize = (green_1 as usize + green_2 as usize) / 2;
+            let green = green as u8;
 
             text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
         }

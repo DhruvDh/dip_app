@@ -6,7 +6,7 @@ const mutations = {
       state.viewer.fileParseErrors = errors;
       state.viewer.file = undefined;
     } else if (type === 'ass1') {
-      state.ass1.fileObj.fileParseSuccessful = true;
+      state.ass1.fileObj.fileParseSuccessful = false;
       state.ass1.fileObj.fileParseErrors = errors;
       state.ass1.fileObj.file = undefined;
 
@@ -20,7 +20,6 @@ const mutations = {
     } else if (type === 'ass2') {
       state.ass2.fileParseSuccessful = false;
       state.ass2.fileParseErrors = errors;
-      state.ass2.file = undefined;
     }
   },
   ADD_FILE: (state, { file, type }) => {
@@ -43,7 +42,17 @@ const mutations = {
     } else if (type === 'ass2') {
       state.ass2.fileParseSuccessful = true;
       state.ass2.fileParseErrors = undefined;
-      state.ass2.file = file;
+
+      state.ass2.partA = { file: file.A };
+      state.ass2.partB = { file: file.B };
+      state.ass2.partC = { file: file.C };
+
+      state.ass2.partA.fileParseSuccessful = true;
+      state.ass2.partA.fileParseErrors = undefined;
+      state.ass2.partB.fileParseSuccessful = true;
+      state.ass2.partB.fileParseErrors = undefined;
+      state.ass2.partC.fileParseSuccessful = true;
+      state.ass2.partC.fileParseErrors = undefined;
     }
   },
   ADD_CSV_FILE: (state, file) => {

@@ -42,6 +42,49 @@ const actions = {
           });
         }
       };
+    } else if (type === 'ass2') {
+      reader.onload = (event) => {
+        const text = event.target.result;
+        try {
+          const partAText = file.name.includes('_hard') ? this._vm.lib.ass2DoPartA(text, 1024) : this._vm.lib.ass2DoPartA(text, 512);
+          const partBText = file.name.includes('_hard') ? this._vm.lib.ass2DoPartB(text, 1024) : this._vm.lib.ass2DoPartB(text, 512);
+          const partCText = file.name.includes('_hard') ? this._vm.lib.ass2DoPartC(text, 1024) : this._vm.lib.ass2DoPartC(text, 512);
+
+          const partAHeader = this._vm.lib.viewerParseHeader(partAText);
+          const partBHeader = this._vm.lib.viewerParseHeader(partBText);
+          const partCHeader = this._vm.lib.viewerParseHeader(partCText);
+
+          partAHeader.pixels = new Uint8ClampedArray(this._vm.lib.viewerParsePixels(partAText));
+          partBHeader.pixels = new Uint8ClampedArray(this._vm.lib.viewerParsePixels(partBText));
+          partCHeader.pixels = new Uint8ClampedArray(this._vm.lib.viewerParsePixels(partCText));
+
+          partAHeader.name = file.name.replace('.txt', '_out_a.txt');
+          partBHeader.name = file.name.replace('.txt', '_out_b.txt');
+          partCHeader.name = file.name.replace('.txt', '_out_c.txt');
+
+          const partAData = new Blob([partAText], { type: 'text/plain' });
+          const partBData = new Blob([partBText], { type: 'text/plain' });
+          const partCData = new Blob([partCText], { type: 'text/plain' });
+
+          partAHeader.fileUrl = window.URL.createObjectURL(partAData);
+          partBHeader.fileUrl = window.URL.createObjectURL(partBData);
+          partCHeader.fileUrl = window.URL.createObjectURL(partCData);
+
+          context.commit('ADD_FILE', {
+            file: {
+              A: partAHeader,
+              B: partBHeader,
+              C: partCHeader,
+            },
+            type: 'ass2',
+          });
+        } catch (errors) {
+          context.commit('ADD_FILE_PARSE_ERRORS', {
+            errors,
+            type: 'ass2',
+          });
+        }
+      };
     }
   },
   ASS1_CONVERT_TO_ASCII(context, {
