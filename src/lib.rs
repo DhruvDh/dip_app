@@ -470,7 +470,7 @@ pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, Js
 }
 
 pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
-    let mut array: Vec<u8> = Vec::with_capacity(256 * 256);
+    let mut array: Vec<u8> = Vec::new();
     let mut errors = String::from("");
     let file_text = file_text.replace(",", ",\n");
 
@@ -499,6 +499,7 @@ pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
             _ => unreachable!(),
         }
     }
+    array.shrink_to_fit();
 
     (array, errors)
 }
@@ -512,4 +513,76 @@ pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     } else {
         Ok(res)
     }
+}
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+#[wasm_bindgen(js_name = ass2DoPartA)]
+pub fn ass2_do_part_a(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", array.len() / (img_width * 1)).as_str());
+    text.push_str(format!("{}\n", img_width).as_str());
+
+    enum Row {
+        BlueGreen,
+        GreenRed
+    };
+
+    let mut row = Row::BlueGreen;
+    
+    for line in array.chunks_exact(img_width) {
+        match row {
+            Row::BlueGreen => {
+                let mut color = Color::Blue;
+                for elem in line {
+                    match color {
+                        Color::Blue => {
+                            text.push_str(
+                                format!("0 0 {}\n", *elem).as_str()
+                            );
+                            color = Color::Green;
+                        },
+                        Color::Green => {
+                            text.push_str(
+                                format!("0 {} 0\n", *elem).as_str()
+                            );
+                            color = Color::Blue;
+                        },
+                        _ => unreachable!()
+                    }      
+                }
+                row = Row::GreenRed;
+            },
+            Row::GreenRed => {
+                let mut color = Color::Green;
+                for elem in line {
+                    match color {
+                        Color::Green => {
+                            text.push_str(
+                                format!("0 {} 0\n", *elem).as_str()
+                            );
+                            color = Color::Red;
+                        },
+                        Color::Red => {
+                            text.push_str(
+                                format!("{} 0 0\n", *elem).as_str()
+                            );
+                            color = Color::Green;
+                        },
+                        _ => unreachable!()
+                    }      
+                }
+                row = Row::BlueGreen;
+            }
+        }
+    }
+
+    Ok(JsValue::from(text))
 }
