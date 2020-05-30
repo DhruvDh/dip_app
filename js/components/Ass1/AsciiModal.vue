@@ -1,23 +1,58 @@
 <template>
   <form action>
-    <div class="modal-card" style="width: auto">
+    <div
+      class="modal-card"
+      style="width: auto"
+    >
       <header class="modal-card-head">
-        <p class="modal-card-title">Convert to ASCII Art</p>
+        <p class="modal-card-title">
+          Convert to ASCII Art
+        </p>
       </header>
       <section class="modal-card-body">
         <b-field label="Enter the character to use for light colored pixels">
-          <b-input v-model="lightChar" type="text" placeholder="~" required />
-          <p v-if="lightCharInvalid" class="help is-danger">Please enter a single character</p>
+          <b-input
+            v-model="lightChar"
+            type="text"
+            placeholder="~"
+            required
+          />
+          <p
+            v-if="lightCharInvalid"
+            class="help is-danger"
+          >
+            Please enter a single character
+          </p>
         </b-field>
 
         <b-field label="Enter the character to use for dark colored pixels">
-          <b-input v-model="darkChar" type="text" placeholder="8" required />
-          <p v-if="darkCharInvalid" class="help is-danger">Please enter a single character</p>
+          <b-input
+            v-model="darkChar"
+            type="text"
+            placeholder="8"
+            required
+          />
+          <p
+            v-if="darkCharInvalid"
+            class="help is-danger"
+          >
+            Please enter a single character
+          </p>
         </b-field>
 
         <b-field label="Enter the threshold used to determine light/dark color for pixels">
-          <b-input v-model="threshold" type="text" placeholder="0.5" required />
-          <p v-if="thresholdInvalid" class="help is-danger">Please enter a floating point value</p>
+          <b-input
+            v-model="threshold"
+            type="text"
+            placeholder="0.5"
+            required
+          />
+          <p
+            v-if="thresholdInvalid"
+            class="help is-danger"
+          >
+            Please enter a floating point value
+          </p>
         </b-field>
         <b-field label="Image Width">
           <b-numberinput
@@ -29,13 +64,21 @@
           />
         </b-field>
       </section>
-      <footer class="modal-card-foot is-fullwidth tile is-parent" >
-          <button class="button tile" type="button" @click="closeModal">Clear</button>
-          <button
-            class="button is-primary tile"
-            type="button"
-            @click="submitModal"
-          >Convert</button>
+      <footer class="modal-card-foot is-fullwidth tile is-parent">
+        <button
+          class="button tile"
+          type="button"
+          @click="closeModal"
+        >
+          Clear
+        </button>
+        <button
+          class="button is-primary tile"
+          type="button"
+          @click="submitModal"
+        >
+          Convert
+        </button>
       </footer>
     </div>
   </form>
@@ -45,19 +88,19 @@
 export default {
   data() {
     return {
-      lightChar: "2",
+      lightChar: '2',
       lightCharInvalid: undefined,
-      darkChar: "3",
+      darkChar: '3',
       darkCharInvalid: undefined,
-      threshold: "0.3",
+      threshold: '0.3',
       thresholdInvalid: undefined,
       isActive: undefined,
-      imgWidth: 256
+      imgWidth: 256,
     };
   },
   methods: {
     closeModal() {
-      this.$store.commit("TOGGLE_ASCII_MODAL_OFF");
+      this.$store.commit('TOGGLE_ASCII_MODAL_OFF');
       this.lightChar = undefined;
       this.darkChar = undefined;
       this.threshold = undefined;
@@ -97,28 +140,28 @@ export default {
       }
 
       if (
-        !this.lightCharInvalid ||
-        !this.darkCharInvalid ||
-        !this.thresholdInvalid
+        !this.lightCharInvalid
+        || !this.darkCharInvalid
+        || !this.thresholdInvalid
       ) {
-        this.$store.dispatch("ASS1_CONVERT_TO_ASCII", {
+        this.$store.dispatch('ASS1_CONVERT_TO_ASCII', {
           lightChar: this.lightChar,
           darkChar: this.darkChar,
           threshold: this.threshold,
-          imgWidth: this.imgWidth
+          imgWidth: this.imgWidth,
         });
       }
 
-      const a = document.createElement("a");
-      a.setAttribute("href", this.$store.state.ass1.asciiFileUrl);
+      const a = document.createElement('a');
+      a.setAttribute('href', this.$store.state.ass1.asciiFileUrl);
       a.setAttribute(
-        "download",
-        this.$store.state.ass1.file.name.replace(".txt", "_ascii_art.txt")
+        'download',
+        this.$store.state.ass1.fileObj.file.name.replace('.txt', '_ascii_art.txt'),
       );
       a.click();
       a.remove();
-    }
-  }
+    },
+  },
 };
 </script>
 

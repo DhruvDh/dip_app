@@ -14,7 +14,7 @@
         id="errorLog"
         class="message-body"
       >
-        <div v-if="$store.state[pageName].fileParseSuccessful">
+        <div v-if="pSuccess">
           <p
             v-for="msg in logMessage"
             :key="msg"
@@ -30,17 +30,17 @@
 
 <script>
 export default {
-  props: ['pageName'],
+  props: ['pErrors', 'pSuccess', 'fName', 'fHeight', 'fWidth', 'fType'],
   computed: {
     fileParseErrors() {
       let errors;
-      if (this.$store.state[this.pageName].fileParseErrors) {
-        if (this.$store.state[this.pageName].fileParseErrors.split) {
-          errors = this.$store.state[this.pageName].fileParseErrors.split(
+      if (this.pErrors) {
+        if (this.pErrors.split) {
+          errors = this.pErrors.split(
             '#!@',
           );
         } else {
-          errors = [this.$store.state[this.pageName].fileParseErrors];
+          errors = [this.pErrors];
         }
 
         if (errors.length >= 15) {
@@ -53,31 +53,31 @@ export default {
       return undefined;
     },
     logMessageClass() {
-      if (this.$store.state[this.pageName].fileParseSuccessful) return 'message is-primary';
+      if (this.pSuccess) return 'message is-primary';
       if (this.fileParseErrors) return 'message is-danger';
       return 'message is-warning';
     },
     logMessage() {
-      if (this.$store.state[this.pageName].fileParseSuccessful) {
-        if (this.pageName === 'viewer') {
+      if (this.pSuccess) {
+        if (this.$route.name === 'Viewer') {
           return [
             'File parsed successfully.',
             `The parsed file type is ${
-              this.$store.state[this.pageName].file.file_type
+              this.fType
             }`,
             `The parsed height is ${
-              this.$store.state[this.pageName].file.height
+              this.fHeight
             }`,
-            `The parsed width is ${this.$store.state[this.pageName].file.width}`,
+            `The parsed width is ${this.fWidth}`,
           ];
         }
-        if (this.pageName === 'ass1') {
+        if (this.$route.name === 'Assignment 1') {
           return [
-            `Successfully parsed ${this.$store.state[this.pageName].file.name}`,
+            `Successfully parsed ${this.fName}`,
           ];
         }
       }
-      if (this.$store.state[this.pageName].fileParseErrors) {
+      if (this.pErrors) {
         return this.fileParseErrors;
       }
       return undefined;
