@@ -172,8 +172,14 @@
 <li>This time around you will be doing this instead ––</li>
 </ul>
 <img src="img/partb_c.gif" height="25%" width="25%">
-- This is a little tricky, and you'll have to spend some time thinking about how the colors are being combined and planning how you write the algorithm.
-- Again, take a screenshot of the image using the Viewer, and attach both the image file and the screenshot and submit.
+<ul>
+<li>
+<p>This is a little tricky, and you’ll have to spend some time thinking about how the colors are being combined and planning how you write the algorithm.</p>
+</li>
+<li>
+<p>Again, take a screenshot of the image using the Viewer, and attach both the image file and the screenshot and submit.</p>
+</li>
+</ul>
 <blockquote>
 <p>Do make sure the resolution you enter in the file properly corresponds to the number of pixels in the output image</p>
 </blockquote>
