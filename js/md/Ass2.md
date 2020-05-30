@@ -53,7 +53,7 @@ You will submit as a zip -
 
 ## Part A
 
-> Part A is worth 20 points.
+> Part A is worth 50 points.
 
 -The first task is simply to convert the list of intensity values given to the above image format, take a screenshot of the images using the supplied binary, and attach both the image text files and the screenshots and submit.
 - You are to also describe, briefly, what you see in the image and why you think it looks the way it does.
@@ -122,7 +122,7 @@ You will submit as a zip -
 
 ## Part B
 
-> Part B is worth 60 points
+> Part B is worth 50 points
 
 - The second part is where you will actually perform the demosaicing, basically, this -
 <img src="img/partb_.gif" height="25%" width="25%">
@@ -136,7 +136,7 @@ You will submit as a zip -
 
 ## Part C
 
-> Part C is worth 40 points
+> Part C is worth 50 points
 
 - This time around you will be doing this instead -
 <img src="img/partb_c.gif" height="25%" width="25%">
