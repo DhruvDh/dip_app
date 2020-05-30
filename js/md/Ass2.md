@@ -129,6 +129,7 @@ You will submit as a zip -
 
 - You will be "combining" the intensity for 4 photodiodes into 1 by doing this -
 <img src="img/partb_b.gif" height="35%" width="35%">
+
 - Again, take a screenshot of the image using the Viewer, and attach both the image file and the screenshot and submit.
 
 > Do make sure the resolution you enter in the file properly corresponds to the number of pixels in the output image
