@@ -64,7 +64,7 @@
 </ul>
 <h2>Part A</h2>
 <blockquote>
-<p>Part A is worth 20 points.</p>
+<p>Part A is worth 50 points.</p>
 </blockquote>
 <p>-The first task is simply to convert the list of intensity values given to the above image format, take a screenshot of the images using the supplied binary, and attach both the image text files and the screenshots and submit.</p>
 <ul>
@@ -148,7 +148,7 @@
 </blockquote>
 <h2>Part B</h2>
 <blockquote>
-<p>Part B is worth 60 points</p>
+<p>Part B is worth 50 points</p>
 </blockquote>
 <ul>
 <li>The second part is where you will actually perform the demosaicing, basically, this ––</li>
@@ -166,7 +166,7 @@
 </blockquote>
 <h2>Part C</h2>
 <blockquote>
-<p>Part C is worth 40 points</p>
+<p>Part C is worth 50 points</p>
 </blockquote>
 <ul>
 <li>This time around you will be doing this instead ––</li>
