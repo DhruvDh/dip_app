@@ -9,7 +9,7 @@
       position="is-centered"
     >
       <b-tab-item
-        label="Part A"
+        label="Output for Part A"
         class="menuItem"
       >
         <ImageViewer
@@ -27,7 +27,7 @@
       </b-tab-item>
 
       <b-tab-item
-        label="Part B"
+        label="Output for Part B"
         class="menuItem"
       >
         <ImageViewer
@@ -45,7 +45,7 @@
       </b-tab-item>
 
       <b-tab-item
-        label="Part C"
+        label="Output for Part C"
         class="menuItem"
       >
         <ImageViewer

@@ -34,6 +34,14 @@ for path in file_paths:
     style = """
 <style lang="scss">
     @import "@primer/css/markdown/index.scss";
+    
+    code {
+        color: #000000 !important;
+    }
+
+    ul {
+        list-style-type: disc !important;
+    }
 </style>
     """
 

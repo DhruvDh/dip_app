@@ -3,9 +3,9 @@
   "name": "dip_app",
   "version": "0.1.0",
   "scripts": {
-    "build": "rimraf docs pkg && webpack --output-public-path=/dip_app/",
-    "perf": "rimraf docs pkg && webpack",
-    "start": "rimraf docs pkg && webpack-dev-server --open -d --output-public-path=/"
+    "build": "python ./do.py && rimraf docs pkg && webpack --output-public-path=/dip_app/",
+    "perf": "python ./do.py && rimraf docs pkg && webpack",
+    "start": "python ./do.py && rimraf docs pkg && webpack-dev-server --open -d --output-public-path=/"
   },
   "devDependencies": {
     "@babel/core": "^7.9.6",
