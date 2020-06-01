@@ -27,6 +27,9 @@ import("../pkg/index.js").then(lib => {
         store,
         render: (h) => h(App),
     }).$mount('#app');
+
+    // hljs.initHighlightingOnLoad();
+
 });
 /* eslint-enable */
 

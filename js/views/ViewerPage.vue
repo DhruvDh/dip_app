@@ -4,14 +4,24 @@
     @drop="dropHandler"
     @dragover="dragOverHandler"
   >
-    <ImageViewer />
-    <Log :page-name="pageName" />
+    <ImageViewer
+      :file-obj="$store.state.viewer"
+      :mount-div="mountDiv"
+    />
+    <Log
+      :p-errors="$store.state.viewer.fileParseErrors"
+      :p-success="$store.state.viewer.fileParseSuccessful"
+      :f-name="fileName"
+      :f-width="fileWidth"
+      :f-height="fileHeight"
+      :f-type="fileType"
+    />
     <FilePicker :page-name="pageName" />
   </section>
 </template>
 
 <script>
-import ImageViewer from '../components/Viewer/ImageViewer.vue';
+import ImageViewer from '../components/ImageViewer.vue';
 import FilePicker from '../components/FilePicker.vue';
 import Log from '../components/Log.vue';
 
@@ -21,9 +31,38 @@ export default {
     FilePicker,
     Log,
   },
+  data() {
+    return {
+      mountDiv: 'viewerDiv',
+    };
+  },
   computed: {
     pageName() {
       return this.$store.state.pageNameRev[this.$store.state.route.name];
+    },
+    fileName() {
+      if (this.$store.state.viewer.file) {
+        return this.$store.state.viewer.file.name;
+      }
+      return '';
+    },
+    fileHeight() {
+      if (this.$store.state.viewer.file) {
+        return this.$store.state.viewer.file.height;
+      }
+      return '';
+    },
+    fileWidth() {
+      if (this.$store.state.viewer.file) {
+        return this.$store.state.viewer.file.width;
+      }
+      return '';
+    },
+    fileType() {
+      if (this.$store.state.viewer.file) {
+        return this.$store.state.viewer.file.file_type;
+      }
+      return '';
     },
   },
   methods: {

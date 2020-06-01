@@ -1,6 +1,3 @@
-mod ass1;
-mod ass2;
-
 #[macro_use]
 extern crate serde_derive;
 extern crate pest;
@@ -8,8 +5,8 @@ extern crate pest;
 extern crate pest_derive;
 
 use console_error_panic_hook::set_once as set_panic_hook;
+use pest::Parser;
 use wasm_bindgen::prelude::*;
-
 
 // TODO: Try turning this to inspectable to get rid of JsParsing
 #[derive(Serialize)]
@@ -18,7 +15,6 @@ pub struct FileHeaderParseResponse {
     height: usize,
     width: usize,
 }
-
 
 macro_rules! unwrap {
     ($x:expr, $e:ident, $line_no:expr) => {
@@ -55,7 +51,6 @@ macro_rules! unwrap {
     };
 }
 
-
 #[wasm_bindgen]
 extern "C" {
     #[wasm_bindgen(js_namespace = console)]
@@ -65,6 +60,187 @@ extern "C" {
 #[wasm_bindgen]
 pub fn init() {
     set_panic_hook();
+}
+
+#[derive(Parser)]
+#[grammar = "parse.pest"]
+pub struct FileParser;
+
+pub fn ass1_parse_file(file_text: &str) -> (Vec<f64>, String) {
+    let mut array: Vec<f64> = Vec::with_capacity(256 * 256);
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => array.push(val.as_str().trim().parse::<f64>().unwrap()),
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (array, errors)
+}
+
+pub fn ass1_convert_to_csv(file_text: &str, img_width: usize) -> (String, String) {
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+    let mut csv = String::new();
+    let mut comma_count = 0;
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (String::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => csv.push_str(val.as_str().trim()),
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => {
+                comma_count = comma_count + 1;
+                if comma_count == img_width {
+                    comma_count = 0;
+                    csv.push_str(",\n");
+                } else {
+                    csv.push(',');
+                }
+            }
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (csv, errors)
+}
+
+pub fn ass1_convert_to_ascii_art(
+    file_text: &str,
+    light_char: char,
+    dark_char: char,
+    threshold: f64,
+    img_width: usize,
+) -> (String, String) {
+    let mut array: String = String::from("");
+    let mut counter = 0;
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (String::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => {
+                let num = val.as_str().trim().parse::<f64>().unwrap();
+                if num <= threshold {
+                    array.push(light_char);
+                } else {
+                    array.push(dark_char);
+                }
+
+                counter = counter + 1;
+                if counter == img_width {
+                    counter = 0;
+                    array.push('\n');
+                }
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    (array, errors)
+}
+
+pub fn ass1_convert_to_grayscale_img(file_text: &str) -> (Vec<u8>, String) {
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+    let mut img = Vec::new();
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_1_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    let mut max = std::f64::MIN;
+    let mut min = std::f64::MAX;
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::FLOATING_POINT_NUMBER => {
+                let num = val.as_str().trim().parse::<f64>().unwrap();
+                img.push(num);
+                if num > max {
+                    max = num;
+                }
+
+                if num < min {
+                    min = num;
+                }
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => {}
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+
+    let (new_max, new_min) = (255u8, 0u8);
+
+    let m = (new_max - new_min) as f64 / (max - min);
+    let b = (new_min as f64 - m) * min;
+
+    let mut new_img: Vec<u8> = vec![];
+
+    for x in img {
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255 - (m * (x as f64) + b) as u8);
+        new_img.push(255);
+    }
+
+    (new_img, errors)
 }
 
 #[allow(unreachable_patterns)]
@@ -238,10 +414,9 @@ pub fn viewer_parse_pixels_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
     }
 }
 
-
 #[wasm_bindgen(js_name = ass1ParseFile)]
 pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
-    let (res, errors) = ass1::parse_file(file_text);
+    let (res, errors) = ass1_parse_file(file_text);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
 
@@ -252,10 +427,9 @@ pub fn ass1_parse_file_json(file_text: &str) -> Result<Vec<f64>, JsValue> {
     }
 }
 
-
 #[wasm_bindgen(js_name = ass1ConvertToCsv)]
 pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<String, JsValue> {
-    let (res, errors) = ass1::convert_to_csv(file_text, img_width);
+    let (res, errors) = ass1_convert_to_csv(file_text, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("#!@");
     if errors != "" {
@@ -264,7 +438,6 @@ pub fn ass1_convert_to_csv_json(file_text: &str, img_width: usize) -> Result<Str
         Ok(res)
     }
 }
-
 
 #[wasm_bindgen(js_name = ass1ConvertToAsciiArt)]
 pub fn ass1_convert_to_ascii_art_json(
@@ -275,7 +448,7 @@ pub fn ass1_convert_to_ascii_art_json(
     img_width: usize,
 ) -> Result<String, JsValue> {
     let (res, errors) =
-        ass1::convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
+        ass1_convert_to_ascii_art(file_text, light_char, dark_char, threshold, img_width);
 
     let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
     if errors != "" {
@@ -284,29 +457,272 @@ pub fn ass1_convert_to_ascii_art_json(
         Ok(res)
     }
 }
-
 
 #[wasm_bindgen(js_name = ass1ConvertToGrayscaleImg)]
 pub fn ass1_convert_to_grayscale_img_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
-    let (res, errors) = ass1::convert_to_grayscale_img(file_text);
-
-    let err: String = errors.lines().collect::<Vec<&str>>().join("\n");
-    if errors != "" {
-        Err(JsValue::from(err))
-    } else {
-        Ok(res)
-    }
-}
-
-
-
-#[wasm_bindgen(js_name = ass2ParseFile)]
-pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
-    let (res, errors) = ass2::parse_file(file_text);
+    let (res, errors) = ass1_convert_to_grayscale_img(file_text);
 
     if errors != "" {
         Err(JsValue::from(errors))
     } else {
         Ok(res)
     }
+}
+
+pub fn ass2_parse_file(file_text: &str) -> (Vec<u8>, String) {
+    let mut array: Vec<u8> = Vec::new();
+    let mut errors = String::from("");
+    let file_text = file_text.replace(",", ",\n");
+
+    let mut file = match FileParser::parse(Rule::ASSIGNMENT_2_FILE, &file_text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return (Vec::new(), errors);
+        }
+    };
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::WHOLE_NUMBER => {
+                let num = val.as_str().trim().parse::<usize>().unwrap();
+                let num = if num > 255 { 255u8 } else { num as u8 };
+                array.push(num)
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
+    array.shrink_to_fit();
+
+    (array, errors)
+}
+
+#[wasm_bindgen(js_name = ass2ParseFile)]
+pub fn ass2_parse_file_json(file_text: &str) -> Result<Vec<u8>, JsValue> {
+    let (res, errors) = ass2_parse_file(file_text);
+
+    if errors != "" {
+        Err(JsValue::from(errors))
+    } else {
+        Ok(res)
+    }
+}
+
+enum Color {
+    Red,
+    Green,
+    Blue,
+}
+
+#[wasm_bindgen(js_name = ass2DoPartA)]
+pub fn ass2_do_part_a(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", array.len() / img_width).as_str());
+    text.push_str(format!("{}\n", img_width).as_str());
+
+    enum Row {
+        BlueGreen,
+        GreenRed,
+    };
+
+    let mut row = Row::BlueGreen;
+
+    for line in array.chunks_exact(img_width) {
+        match row {
+            Row::BlueGreen => {
+                let mut color = Color::Blue;
+                for elem in line {
+                    match color {
+                        Color::Blue => {
+                            text.push_str(format!("0 0 {}\n", *elem).as_str());
+                            color = Color::Green;
+                        }
+                        Color::Green => {
+                            text.push_str(format!("0 {} 0\n", *elem).as_str());
+                            color = Color::Blue;
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+                row = Row::GreenRed;
+            }
+            Row::GreenRed => {
+                let mut color = Color::Green;
+                for elem in line {
+                    match color {
+                        Color::Green => {
+                            text.push_str(format!("0 {} 0\n", *elem).as_str());
+                            color = Color::Red;
+                        }
+                        Color::Red => {
+                            text.push_str(format!("{} 0 0\n", *elem).as_str());
+                            color = Color::Green;
+                        }
+                        _ => unreachable!(),
+                    }
+                }
+                row = Row::BlueGreen;
+            }
+        }
+    }
+
+    Ok(JsValue::from(text))
+}
+
+#[wasm_bindgen(js_name = ass2DoPartB)]
+pub fn ass2_do_part_b(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+    let img_height = array.len() / img_width;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", img_height / 2).as_str());
+    text.push_str(format!("{}\n", img_width / 2).as_str());
+
+    let mut stacked_array: Vec<Vec<u8>> = Vec::with_capacity(img_width);
+
+    for i in 0..img_height {
+        let mut current_row: Vec<u8> = Vec::with_capacity(img_width);
+        for j in 0..img_width {
+            current_row.push(array[i * img_height + j]);
+        }
+        stacked_array.push(current_row);
+    }
+
+    let stacked_array = stacked_array;
+
+    for i in (0..img_height).step_by(2) {
+        let row_1 = &stacked_array[i];
+        let row_2 = &stacked_array[i + 1];
+
+        for j in (0..img_width).step_by(2) {
+            let blue = row_1[j];
+            let green_1 = row_1[j + 1];
+            let green_2 = row_2[j];
+            let red = row_2[j + 1];
+
+            let green: usize = (green_1 as usize + green_2 as usize) / 2;
+            let green = green as u8;
+
+            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+        }
+    }
+
+    Ok(JsValue::from(text))
+}
+
+#[wasm_bindgen(js_name = ass2DoPartC)]
+pub fn ass2_do_part_c(file_text: &str, img_width: usize) -> Result<JsValue, JsValue> {
+    let array = ass2_parse_file_json(file_text)?;
+    let img_height = array.len() / img_width;
+
+    let mut text = String::new();
+    text.push_str("RGB\n");
+    text.push_str(format!("{}\n", img_height - 1).as_str());
+    text.push_str(format!("{}\n", img_width - 1).as_str());
+
+    enum RowType {
+        A,
+        B,
+    }
+
+    enum GridType {
+        BGGR,
+        GBRG,
+        GRBG,
+        RGGB,
+    };
+
+    let mut row = RowType::A;
+
+    macro_rules! index {
+        ($x:expr, $y:expr) => {
+            (($x * img_width) + $y) as usize
+        };
+    };
+
+    for i in 0..img_height - 1 {
+        match row {
+            RowType::A => {
+                let mut grid = GridType::BGGR;
+
+                for j in 0..img_width - 1 {
+                    match grid {
+                        GridType::BGGR => {
+                            let blue = array[index!(i, j)];
+                            let green1 = array[index!(i, j + 1)] as usize;
+                            let green2 = array[index!(i + 1, j)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i + 1, j + 1)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::GBRG;
+                        }
+                        GridType::GBRG => {
+                            let blue = array[index!(i, j + 1)];
+                            let green1 = array[index!(i, j)] as usize;
+                            let green2 = array[index!(i + 1, j + 1)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i + 1, j)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::BGGR;
+                        }
+                        GridType::GRBG => panic!("I should not be at this RowType (GRBG)"),
+                        GridType::RGGB => panic!("I should not be at this RowType (RGGB)"),
+                    };
+                }
+
+                row = RowType::B;
+            }
+            RowType::B => {
+                let mut grid = GridType::GRBG;
+
+                for j in 0..img_width - 1 {
+                    match grid {
+                        GridType::BGGR => panic!("I should not bee at this RowType (BGGR)"),
+                        GridType::GBRG => panic!("I should not be at this RowType (GBRG)"),
+                        GridType::GRBG => {
+                            let blue = array[index!(i + 1, j)];
+                            let green1 = array[index!(i, j)] as usize;
+                            let green2 = array[index!(i + 1, j + 1)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i, j + 1)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::RGGB;
+                        }
+                        GridType::RGGB => {
+                            let blue = array[index!(i + 1, j + 1)];
+                            let green1 = array[index!(i, j + 1)] as usize;
+                            let green2 = array[index!(i + 1, j)] as usize;
+                            let green = (green1 + green2) / 2;
+                            let green = green as u8;
+                            let red = array[index!(i, j)];
+
+                            text.push_str(format!("{} {} {}\n", red, green, blue).as_str());
+                            grid = GridType::GRBG;
+                        }
+                    };
+                }
+
+                row = RowType::A;
+            }
+        };
+    }
+
+    Ok(JsValue::from(text))
 }
