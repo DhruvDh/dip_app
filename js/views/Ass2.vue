@@ -51,7 +51,7 @@
         <ImageViewer
           :file-obj="$store.state.ass2.partC"
           mount-div="viewerDivC"
-        />
+        />  
         <b-button
           :disabled="convIsDisabled"
           class="is-primary"

@@ -22,7 +22,7 @@ export default {
       if (this.page === 'ass1') {
         return `Successfully parsed ${this.$store.state.ass1.fileObj.file.name}`;
       } if (this.page === 'ass2') {
-        return `Successfully created ${this.$store.state.ass2.partA.name}, ${this.$store.state.ass2.partB.name}, and ${this.$store.state.ass2.partC.name}`;
+        return `Successfully created ${this.$store.state.ass2.partA.file.name}, ${this.$store.state.ass2.partB.file.name}, and ${this.$store.state.ass2.partC.file.name}`;
       }
 
       return `Successfully parsed ${this.$store.state[this.page].file.name}`;

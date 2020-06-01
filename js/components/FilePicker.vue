@@ -15,23 +15,50 @@
         </b-upload>
       </b-field>
     </section>
-    <b-button type="is-dark" class="sample" outlined expanded>Click here to load Sample file</b-button>
+    <b-button
+      type="is-dark"
+      class="sample"
+      @click="loadSample"
+      outlined
+      expanded
+    >{{ sampleMessage }}</b-button>
   </div>
 </template>
 
 <script>
+import axios from "axios";
+// axios.defaults.headers.post["Access-Control-Allow-Origin"] = "*";
+
 export default {
   props: ["pageName"],
   data() {
     return {
-      dropFile: undefined
+      dropFile: undefined,
+      sampleMessage: "Click here to load Sample file"
     };
   },
   methods: {
     parse() {
+      this.sampleMessage = "Click here to load Sample file"; 
       this.$store.dispatch("PARSE_FILE", {
         file: this.dropFile,
         type: this.pageName
+      });
+    },
+    loadSample() {
+      this.sampleMessage = "Sample file loding...";
+      const context = this;
+      axios({
+        method: "get",
+        url: `samples/${this.pageName}.txt`,
+        responseType: "blob"
+      }).then(function(res) {
+        res.data.name = "sample.txt";
+        context.$store.dispatch("PARSE_FILE", {
+          file: res.data,
+          type: context.pageName
+        });
+        context.sampleMessage = "Sample file loaded.";
       });
     }
   }
