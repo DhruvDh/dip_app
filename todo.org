@@ -1,9 +1,12 @@
 #+TITLE: DIP APP
 
-* [3/6] Lib.rs
-** DONE Turn the file response struct to be inspectable.
-** DONE Remove the weird split thingo.
-** DONE Generate ASCII art
-** DONE Do the threshold thing.
-** DONE Render the file.
-** DONE Scale and render the whole file.
+* Image Rescaling
+** TODO Notes
+
+* Geometric Image Transfroms
+** STRT Notes
+
+* Image Filtering
+** STRT Notes
+
+* Feature Extraction
