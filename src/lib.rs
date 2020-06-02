@@ -728,6 +728,43 @@ pub fn ass2_do_part_c(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
 }
 
 #[wasm_bindgen(js_name = ass3ComputeKernel)]
-pub fn ass3_compute_kernel(pixels: Vec<u8>, height: usize, width: usize, kernel: Vec<f32>) -> Vec<u8> {
-    pixels
+pub fn ass3_compute_kernel(pixels: Vec<u8>, height: u32, width: u32, kernel: Vec<f32>) -> Vec<u8> {
+    let scale_factor: f32 = kernel.iter().sum();
+    
+    let kernel_height = 3;
+    let kernel_width = 3;
+    let new_height = height - kernel_height + 1;
+    let new_width = (width - kernel_width + 1) * 4;
+
+    let mut new_pixels: Vec<u8> = Vec::with_capacity((new_height * new_width) as usize);
+
+    for i in 0..new_height {
+        for j in (0..new_width).step_by(4) {
+            let base_red = i * (width * 4) + j;
+            let base_green = i * (width * 4) + j + 1;
+            let base_blue = i * (width * 4) + j + 2;
+
+            let mut red: f32 = 0f32;
+            let mut green: f32 = 0f32;
+            let mut blue: f32 = 0f32;
+
+            for k in (0..=8u32).step_by(4) {
+                let ki = k / 4;
+                red = red + (kernel[ki as usize] * pixels[(base_red + k) as usize] as f32);
+                green = green + (kernel[ki as usize] * pixels[(base_green + k) as usize] as f32);
+                blue = blue + (kernel[ki as usize] * pixels[(base_blue + k) as usize] as f32);
+            }
+            
+            red = red / scale_factor;
+            green = green / scale_factor;
+            blue = blue / scale_factor;
+
+            new_pixels.push(red as u8);
+            new_pixels.push(green as u8);
+            new_pixels.push(blue as u8);
+            new_pixels.push(255 as u8);
+        }
+    }
+
+    new_pixels
 }
