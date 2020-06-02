@@ -4,7 +4,7 @@ const actions = {
     reader.readAsText(file);
     reader.onerror = (error) => console.log(error);
 
-    if (type === 'viewer') {
+    if (type === 'viewer' || type === 'ass3') {
       reader.onload = (event) => {
         const text = event.target.result.trim();
         try {
@@ -13,12 +13,12 @@ const actions = {
           header.name = file.name;
           context.commit('ADD_FILE', {
             file: header,
-            type: 'viewer',
+            type,
           });
         } catch (errors) {
           context.commit('ADD_FILE_PARSE_ERRORS', {
             errors,
-            type: 'viewer',
+            type,
           });
         }
       };
