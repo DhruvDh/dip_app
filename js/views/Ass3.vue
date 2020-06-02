@@ -13,51 +13,54 @@
     />
 
     <div class="container">
-    <KernelFormat />
-    
-      <b-field label="Enter Kernel" >
-        <b-input v-model="name"></b-input>
+      <KernelFormat />
+
+      <b-field label="Enter Kernel">
+        <b-input v-model="kernelText" @input="kernelTextChange"></b-input>
       </b-field>
+
+      <Log
+        v-if="!(kernelParseSuccessful)"
+        :p-errors="kernelParseErrors"
+        :p-success="kernelParseSuccessful"
+      />
 
       <div class="kernelHead">
         <div class="kernel">
           <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[0][0]"></b-input>
           </b-field>
           <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[0][1]"></b-input>
           </b-field>
           <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[0][2]"></b-input>
+          </b-field>
+        </div>
+        <div class="kernel">
+        <b-field>
+            <b-input v-model="kernelArray[1][0]"></b-input>
+          </b-field>
+          <b-field>
+            <b-input v-model="kernelArray[1][1]"></b-input>
+          </b-field>
+          <b-field>
+            <b-input v-model="kernelArray[1][2]"></b-input>
           </b-field>
         </div>
         <div class="kernel">
           <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[2][0]"></b-input>
           </b-field>
           <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[2][1]"></b-input>
           </b-field>
           <b-field>
-            <b-input v-model="name"></b-input>
-          </b-field>
-        </div>
-        <div class="kernel">
-          <b-field>
-            <b-input v-model="name"></b-input>
-          </b-field>
-          <b-field>
-            <b-input v-model="name"></b-input>
-          </b-field>
-          <b-field>
-            <b-input v-model="name"></b-input>
+            <b-input v-model="kernelArray[2][2]"></b-input>
           </b-field>
         </div>
       </div>
-       <Log v-if="!(kernelParseSuccessful)"
-      :p-errors="kernelParseErrors"
-      :p-success="kernelParseSuccessful"
-    />
+      
     </div>
     <FilePicker :page-name="pageName" />
     <MdPage />
@@ -68,8 +71,8 @@
 import ImageViewer from "../components/ImageViewer.vue";
 import FilePicker from "../components/FilePicker.vue";
 import Log from "../components/Log.vue";
-import KernelFormat from '../md/KernelFormat.vue';
-import MdPage from '../md/Ass3.vue';
+import KernelFormat from "../md/KernelFormat.vue";
+import MdPage from "../md/Ass3.vue";
 
 export default {
   components: {
@@ -83,8 +86,15 @@ export default {
     return {
       mountDiv: "ass3Div",
       kernelParseSuccessful: true,
-      kernelParseErrors: '',
+      kernelParseErrors: "",
+      kernelText: "[[1.2, 1.2, 1.2], [1.2, 1.2, 1.2], [1.2, 1.2, 1.2]]",
+      kernelArray: [[1.2, 1.2, 1.2], [1.2, 1.2, 1.2], [1.2, 1.2, 1.2]],
     };
+  },
+  watch: {
+      kernelText(newVal) {
+          console.log(newVal);
+      }
   },
   computed: {
     pageName() {
@@ -144,6 +154,14 @@ export default {
     dragOverHandler(ev) {
       // Prevent default behavior (Prevent file from being opened)
       ev.preventDefault();
+    },
+    kernelTextChange(newVal) {
+      try {
+        this.lib.ass3ParseKernel(newVal);
+      } catch (err) {
+        this.kernelParseSuccessful = false;
+        this.kernelParseErrors = err;
+      }
     }
   }
 };
@@ -158,6 +176,4 @@ export default {
   display: flex;
   margin: 2rem;
 }
-
-
 </style>
