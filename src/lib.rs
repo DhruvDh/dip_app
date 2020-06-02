@@ -768,3 +768,18 @@ pub fn ass3_compute_kernel(pixels: Vec<u8>, height: u32, width: u32, kernel: Vec
 
     new_pixels
 }
+
+#[wasm_bindgen(js_name = ass3ParseKernel)]
+pub fn ass3_parse_kernel(text: &str) -> Result<(), JsValue> {
+    let mut errors = String::from("");
+
+    let mut file = match FileParser::parse(Rule::KERNEL, &text) {
+        Ok(val) => val,
+        Err(err) => {
+            errors = format!("{}", err);
+            return Err(JsValue::from(errors));
+        }
+    };
+   
+    Ok(())
+}
