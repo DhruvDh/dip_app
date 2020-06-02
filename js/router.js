@@ -4,6 +4,7 @@ import Home from './views/Home.vue';
 import ViewerPage from './views/ViewerPage.vue';
 import Ass1 from './views/Ass1.vue';
 import Ass2 from './views/Ass2.vue';
+import Ass3 from './views/Ass3.vue';
 
 Vue.use(VueRouter);
 
