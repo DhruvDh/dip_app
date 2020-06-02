@@ -39,7 +39,7 @@ export default {
   },
   methods: {
     parse() {
-      this.sampleMessage = "Click here to load Sample file"; 
+      this.sampleMessage = "Click here to load Sample file";
       this.$store.dispatch("PARSE_FILE", {
         file: this.dropFile,
         type: this.pageName

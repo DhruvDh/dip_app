@@ -28,6 +28,11 @@ const routes = [
     name: 'Assignment 2',
     component: Ass2,
   },
+  {
+    path: '/ass_3',
+    name: 'Assignment 3',
+    component: Ass3,
+  },
 ];
 
 /* eslint-disable */
