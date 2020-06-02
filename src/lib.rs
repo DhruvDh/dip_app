@@ -728,6 +728,6 @@ pub fn ass2_do_part_c(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
 }
 
 #[wasm_bindgen(js_name = ass3ComputeKernel)]
-pub fn ass3_compute_kernel(pixels: Vec<u8>, height: usize, width: usize) -> Vec<u8> {
+pub fn ass3_compute_kernel(pixels: Vec<u8>, height: usize, width: usize, kernel: Vec<f32>) -> Vec<u8> {
     pixels
 }
