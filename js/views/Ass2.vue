@@ -106,7 +106,7 @@ export default {
     },
     fileName() {
       if (this.$store.state.ass2.fileParseSuccessful) {
-        return `${this.$store.state.ass2.partA.name}, ${this.$store.state.ass2.partB.name}, and ${this.$store.state.ass2.partC.name}`;
+        return `${this.$store.state.ass2.partA.file.name}, ${this.$store.state.ass2.partB.file.name}, and ${this.$store.state.ass2.partC.file.name}`;
       }
       return '';
     },
