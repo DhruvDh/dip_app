@@ -3,11 +3,11 @@ COMMA = {
 }
 
 OPENING_SQUARE_BRACKET = {
-    "["
+    SEPARATOR* ~ "[" ~ SEPARATOR*
 }
 
 CLOSING_SQUARE_BRACKET = {
-    "]"
+    SEPARATOR* ~ "]" ~ SEPARATOR*
 }
 
 FLOATING_POINT_NUMBER = {

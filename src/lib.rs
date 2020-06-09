@@ -769,6 +769,14 @@ pub fn ass3_compute_kernel(pixels: Vec<u8>, height: u32, width: u32, kernel: Vec
     new_pixels
 }
 
+#[derive(Serialize)]
+pub struct KernelParseResponse {
+    kernel_format: String,
+    height: usize,
+    width: usize,
+    value: Vec<f32>
+}
+
 #[wasm_bindgen(js_name = ass3ParseKernel)]
 pub fn ass3_parse_kernel(text: &str) -> Result<(), JsValue> {
     let mut errors = String::from("");
@@ -780,6 +788,23 @@ pub fn ass3_parse_kernel(text: &str) -> Result<(), JsValue> {
             return Err(JsValue::from(errors));
         }
     };
+
+    let mut value = vec![];
+
+    for val in file.into_inner() {
+        match val.as_rule() {
+            Rule::WHOLE_NUMBER => {
+                let num = val.as_str().trim().parse::<usize>().unwrap();
+                let num = if num > 255 { 255u8 } else { num as u8 };
+                array.push(num)
+            }
+            Rule::OPENING_SQUARE_BRACKET => (),
+            Rule::CLOSING_SQUARE_BRACKET => (),
+            Rule::COMMA => (),
+            Rule::EOI => (),
+            _ => unreachable!(),
+        }
+    }
    
     Ok(())
 }

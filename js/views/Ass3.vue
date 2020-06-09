@@ -32,6 +32,11 @@
         />
       </b-field>
 
+      <div
+        id="matrixDisplay"
+        class="section has-text-centered"
+      />
+
       <Log
         v-if="!(kernelParseSuccessful)"
         :p-errors="kernelParseErrors"
@@ -139,10 +144,41 @@ export default {
       }
       return '';
     },
+    matrixMathML() {
+      return String.raw`\begin{bmatrix}
+      ${this.kernelArray00} & ${this.kernelArray01} & ${this.kernelArray02}\\
+      ${this.kernelArray10} & ${this.kernelArray11} & ${this.kernelArray12}\\
+      ${this.kernelArray20} & ${this.kernelArray21} & ${this.kernelArray22}\\
+      \end{bmatrix}`;
+    },
   },
   watch: {
-    kernelText(newVal) {
-      console.log(newVal);
+    kernelArray00() {
+      this.updateMatrixDiv();
+    },
+    kernelArray01() {
+      this.updateMatrixDiv();
+    },
+    kernelArray02() {
+      this.updateMatrixDiv();
+    },
+    kernelArray10() {
+      this.updateMatrixDiv();
+    },
+    kernelArray11() {
+      this.updateMatrixDiv();
+    },
+    kernelArray12() {
+      this.updateMatrixDiv();
+    },
+    kernelArray20() {
+      this.updateMatrixDiv();
+    },
+    kernelArray21() {
+      this.updateMatrixDiv();
+    },
+    kernelArray22() {
+      this.updateMatrixDiv();
     },
   },
   methods: {
@@ -178,10 +214,19 @@ export default {
     kernelTextChange(newVal) {
       try {
         this.lib.ass3ParseKernel(newVal);
+        this.kernelParseSuccessful = true;
+        this.kernelParseErrors = '';
       } catch (err) {
         this.kernelParseSuccessful = false;
         this.kernelParseErrors = err;
       }
+    },
+    updateMatrixDiv() {
+      const div = document.getElementById('matrixDisplay');
+      div.innerHTML = '';
+      div.appendChild(MathJax.tex2chtml(this.matrixMathML));
+      MathJax.startup.document.clear();
+      MathJax.startup.document.updateDocument();
     },
   },
 };
@@ -204,6 +249,12 @@ export default {
 
 .kernelInput {
   font-family: "LM Roman 10" !important;
+  font-size: 1.75rem !important;
+  text-align: center !important;
 }
 
+.MathJax {
+  font-size: 2em !important;
+  color: black !important;
+}
 </style>

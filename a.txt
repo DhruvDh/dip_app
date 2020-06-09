@@ -1,0 +1,26 @@
+
+
+    Directory: C:\Users\dhruv\Dropbox\documents\Summer\dip_app
+
+Mode                 LastWriteTime         Length Name
+----                 -------------         ------ ----
+da---           5/12/2020 10:26 AM                .vscode
+da---            6/2/2020  1:41 PM                js
+da---            6/8/2020  6:22 PM                node_modules
+da---            6/8/2020  6:31 PM                pkg
+da---           5/30/2020 12:43 AM                src
+da---            6/1/2020  1:45 PM                static
+da---            6/8/2020  5:14 PM                target
+-a---           5/18/2020  6:18 PM             33 .babelrc
+-a---            6/8/2020  5:10 PM            460 .eslintrc.js
+-a---           5/15/2020 12:16 PM             43 .gitignore
+-a---            6/8/2020  6:59 PM              0 a.txt
+-a---            6/1/2020  5:05 PM           8674 Cargo.lock
+-a---           5/18/2020  6:18 PM            753 Cargo.toml
+-a---            6/4/2020  1:17 AM           1192 do.py
+-a---            6/8/2020  6:22 PM           1358 package.json
+-a---            6/8/2020  6:22 PM         352807 package-lock.json
+-a---           5/11/2020 11:30 AM              0 README.md
+-a---            6/2/2020  3:22 AM            148 todo.org
+-a---           5/18/2020  6:18 PM           1683 webpack.config.js
+
