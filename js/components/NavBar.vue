@@ -15,6 +15,13 @@
         Assignment 2
       </b-navbar-item>
 
+       <b-navbar-item
+        tag="router-link"
+        :to="{ path: '/ass_3' }"
+      >
+        Assignment 3B
+      </b-navbar-item>
+
       <b-navbar-item
         tag="router-link"
         :to="{ path: '/viewer' }"

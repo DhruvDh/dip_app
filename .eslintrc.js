@@ -12,6 +12,6 @@ module.exports = {
       'eol-last': 'off',
       'linebreak-style': 'off',
       'vue/require-v-for-key': 'off',
-      'no-underscore-dangle': 'off'
+      'no-underscore-dangle': 'off',
     }
   }

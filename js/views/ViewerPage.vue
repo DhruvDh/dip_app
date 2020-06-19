@@ -4,6 +4,9 @@
     @drop="dropHandler"
     @dragover="dragOverHandler"
   >
+   <div class="column is-narrow is-size-2 has-text-centered">
+      Image Viewer
+    </div>
     <ImageViewer
       :file-obj="$store.state.viewer"
       :mount-div="mountDiv"

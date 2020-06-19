@@ -1,10 +1,10 @@
 /* eslint-disable no-param-reassign */
 const mutations = {
   ADD_FILE_PARSE_ERRORS: (state, { errors, type }) => {
-    if (type === 'viewer') {
-      state.viewer.fileParseSuccessful = false;
-      state.viewer.fileParseErrors = errors;
-      state.viewer.file = undefined;
+    if (type === 'viewer' || type === 'ass3') {
+      state[type].fileParseSuccessful = false;
+      state[type].fileParseErrors = errors;
+      state[type].file = undefined;
     } else if (type === 'ass1') {
       state.ass1.fileObj.fileParseSuccessful = false;
       state.ass1.fileObj.fileParseErrors = errors;
@@ -23,10 +23,10 @@ const mutations = {
     }
   },
   ADD_FILE: (state, { file, type }) => {
-    if (type === 'viewer') {
-      state.viewer.fileParseSuccessful = true;
-      state.viewer.fileParseErrors = undefined;
-      state.viewer.file = file;
+    if (type === 'viewer' || type === 'ass3') {
+      state[type].fileParseSuccessful = true;
+      state[type].fileParseErrors = undefined;
+      state[type].file = file;
     } else if (type === 'ass1') {
       state.ass1.fileObj.fileParseSuccessful = true;
       state.ass1.fileObj.fileParseErrors = undefined;
@@ -71,6 +71,12 @@ const mutations = {
     state.ass1.grayImgValues = values;
     state.ass1.grayImgValuesReady = true;
   },
+  ADD_ASS3_FILE_TEXT: (state, text) => {
+    state.ass3.fileText = text;
+  },
+  ADD_ASS3_KERNEL: (state, kernel) => {
+    state.ass3.kernel = kernel;
+  }
 };
 
 export default mutations;

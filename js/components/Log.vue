@@ -76,6 +76,11 @@ export default {
             `Successfully parsed ${this.fName}`,
           ];
         }
+        if (this.$route.name === 'Assignment 2') {
+          return [
+            `Successfully parsed ${this.fName}`,
+          ];
+        }
       }
       if (this.pErrors) {
         return this.fileParseErrors;

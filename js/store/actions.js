@@ -13,12 +13,12 @@ const actions = {
           header.name = file.name;
           context.commit('ADD_FILE', {
             file: header,
-            type: 'viewer',
+            type,
           });
         } catch (errors) {
           context.commit('ADD_FILE_PARSE_ERRORS', {
             errors,
-            type: 'viewer',
+            type,
           });
         }
       };
@@ -85,6 +85,12 @@ const actions = {
           });
         }
       };
+    } else if (type === 'ass3') {
+      reader.onload = (event) => {
+        const text = event.target.result.trim();
+        context.commit('ADD_ASS3_FILE_TEXT', text);
+        context.dispatch('ASS3_UPDATE_IMAGE', { name: file.name, type });
+      };
     }
   },
   ASS1_CONVERT_TO_ASCII(context, {
@@ -136,6 +142,28 @@ const actions = {
       context.commit('ADD_FILE_PARSE_ERRORS', {
         errors,
         type: 'ass1',
+      });
+    }
+  },
+  ASS3_UPDATE_IMAGE(context, { name, type }) {
+    try {
+      const text = context.state.ass3.fileText;
+      const { kernel } = context.state.ass3;
+      console.log(kernel);
+      const header = this._vm.lib.viewerParseHeader(text);
+      header.pixels = new Uint8ClampedArray(this._vm.lib.ass3Compute(text, kernel.height, kernel.width, kernel.value));
+      header.height = header.height - kernel.height + 1;
+      header.width = header.width - kernel.width + 1;
+      header.name = name;
+
+      context.commit('ADD_FILE', {
+        file: header,
+        type,
+      });
+    } catch (errors) {
+      context.commit('ADD_FILE_PARSE_ERRORS', {
+        errors,
+        type,
       });
     }
   },
