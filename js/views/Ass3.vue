@@ -5,7 +5,7 @@
     @dragover="dragOverHandler"
   >
     <div class="column is-narrow is-size-2 has-text-centered">
-      Assignment 3
+      Assignment 3B
     </div>
 
     <ImageViewer
@@ -42,49 +42,17 @@
         :p-errors="kernelParseErrors"
         :p-success="kernelParseSuccessful"
       />
-
-      <div class="kernelHead">
-        <div class="kernel">
-          <b-field>
-            <b-input v-model="kernelArray00" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray01" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray02" />
-          </b-field>
-        </div>
-        <div class="kernel">
-          <b-field>
-            <b-input v-model="kernelArray10" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray11" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray12" />
-          </b-field>
-        </div>
-        <div class="kernel">
-          <b-field>
-            <b-input v-model="kernelArray20" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray21" />
-          </b-field>
-          <b-field>
-            <b-input v-model="kernelArray22" />
-          </b-field>
-        </div>
-      </div>
     </div>
-    <FilePicker :page-name="pageName" />
+    <FilePicker
+      :page-name="pageName"
+      :kernel="kernel"
+    />
     <MdPage />
   </section>
 </template>
 
 <script>
+import { mapState } from 'vuex';
 import ImageViewer from '../components/ImageViewer.vue';
 import FilePicker from '../components/FilePicker.vue';
 import Log from '../components/Log.vue';
@@ -104,16 +72,8 @@ export default {
       mountDiv: 'ass3Div',
       kernelParseSuccessful: true,
       kernelParseErrors: '',
-      kernelText: '[ [1.2, 1.2, 1.2] , [1.2, 1.2, 1.2] , [1.2, 1.2, 1.2] ]',
-      kernelArray00: 1.2,
-      kernelArray01: 1.2,
-      kernelArray02: 1.2,
-      kernelArray10: 1.2,
-      kernelArray11: 1.2,
-      kernelArray12: 1.2,
-      kernelArray20: 1.2,
-      kernelArray21: 1.2,
-      kernelArray22: 1.2,
+      kernelText:
+        '[ [-1.0, -1.0, -1.0], [-1.0, 8.0, -1.0], [-1.0, -1.0, -1.0] ]',
     };
   },
   computed: {
@@ -145,41 +105,28 @@ export default {
       return '';
     },
     matrixMathML() {
-      return String.raw`\begin{bmatrix}
-      ${this.kernelArray00} & ${this.kernelArray01} & ${this.kernelArray02}\\
-      ${this.kernelArray10} & ${this.kernelArray11} & ${this.kernelArray12}\\
-      ${this.kernelArray20} & ${this.kernelArray21} & ${this.kernelArray22}\\
+      const rows = this.kernel.kernel.map((row) => row.join(' & '));
+      const matrix = rows.join('\\\\\n');
+
+      let scaleFactor = this.kernel.kernel.flat().reduce((a, b) => a + b, 0);
+      scaleFactor = scaleFactor !== 0 ? scaleFactor.toFixed(2) : 1;
+      return String.raw`\frac{1}{${scaleFactor}} *
+      \begin{bmatrix}
+      ${matrix}
       \end{bmatrix}`;
     },
+    ...mapState({
+      kernel: (state) => state.ass3.kernel,
+    }),
   },
   watch: {
-    kernelArray00() {
+    kernelText(newVal) {
       this.updateMatrixDiv();
     },
-    kernelArray01() {
-      this.updateMatrixDiv();
-    },
-    kernelArray02() {
-      this.updateMatrixDiv();
-    },
-    kernelArray10() {
-      this.updateMatrixDiv();
-    },
-    kernelArray11() {
-      this.updateMatrixDiv();
-    },
-    kernelArray12() {
-      this.updateMatrixDiv();
-    },
-    kernelArray20() {
-      this.updateMatrixDiv();
-    },
-    kernelArray21() {
-      this.updateMatrixDiv();
-    },
-    kernelArray22() {
-      this.updateMatrixDiv();
-    },
+  },
+  mounted() {
+    this.kernelTextChange(this.kernelText);
+    setTimeout(() => this.updateMatrixDiv(), 1000);
   },
   methods: {
     dropHandler(ev) {
@@ -213,12 +160,41 @@ export default {
     },
     kernelTextChange(newVal) {
       try {
-        this.lib.ass3ParseKernel(newVal);
+        const res = this.lib.ass3ParseKernel(newVal);
         this.kernelParseSuccessful = true;
         this.kernelParseErrors = '';
-      } catch (err) {
+        for (let i = 0; i < res.height; i += 1) {
+          const row = [];
+          for (let j = 0; j < res.width; j += 1) {
+            row.push(res.value[i * res.width + j]);
+          }
+          res.kernel.push(row);
+        }
+        this.$store.commit('ADD_ASS3_KERNEL', res);
+        if (this.$store.state.ass3.fileParseSuccessful) {
+          this.$store.dispatch('ASS3_UPDATE_IMAGE', {
+            name: this.$store.state.ass3.file.name,
+            type: 'ass3',
+          });
+        }
+        return res;
+      } catch (e) {
+        const res = {
+          kernelParseErrors: e,
+          kernelParseSuccessful: false,
+          height: 0,
+          width: 0,
+          value: [],
+          kernel: [[]],
+        };
+        this.$store.commit('ADD_ASS3_KERNEL', res);
         this.kernelParseSuccessful = false;
-        this.kernelParseErrors = err;
+        this.kernelParseErrors = e;
+        const div = document.getElementById('matrixDisplay');
+        div.innerHTML = '';
+        MathJax.startup.document.clear();
+        MathJax.startup.document.updateDocument();
+        return res;
       }
     },
     updateMatrixDiv() {
@@ -239,7 +215,7 @@ export default {
 }
 
 .kernel {
-  width: 5%;
+  width: 15%;
 }
 
 .kernelHead {

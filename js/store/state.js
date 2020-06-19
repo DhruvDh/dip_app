@@ -29,6 +29,8 @@ const state = {
     fileParseErrors: undefined,
     file: undefined,
     fileParseSuccessful: false,
+    fileText: undefined,
+    kernel: undefined,
   },
   home: {
     fileParseErrors: undefined,

@@ -19,7 +19,7 @@
         tag="router-link"
         :to="{ path: '/ass_3' }"
       >
-        Assignment 3
+        Assignment 3B
       </b-navbar-item>
 
       <b-navbar-item

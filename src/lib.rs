@@ -16,6 +16,10 @@ pub struct FileHeaderParseResponse {
     width: usize,
 }
 
+#[derive(Parser)]
+#[grammar = "parse.pest"]
+pub struct FileParser;
+
 macro_rules! unwrap {
     ($x:expr, $e:ident, $line_no:expr) => {
         match $x {
@@ -61,10 +65,6 @@ extern "C" {
 pub fn init() {
     set_panic_hook();
 }
-
-#[derive(Parser)]
-#[grammar = "parse.pest"]
-pub struct FileParser;
 
 pub fn ass1_parse_file(file_text: &str) -> (Vec<f64>, String) {
     let mut array: Vec<f64> = Vec::with_capacity(256 * 256);
@@ -727,42 +727,87 @@ pub fn ass2_do_part_c(file_text: &str, img_width: usize) -> Result<JsValue, JsVa
     Ok(JsValue::from(text))
 }
 
-#[wasm_bindgen(js_name = ass3ComputeKernel)]
-pub fn ass3_compute_kernel(pixels: Vec<u8>, height: u32, width: u32, kernel: Vec<f32>) -> Vec<u8> {
+pub fn ass3_compute_kernel(
+    pixels: Vec<u8>,
+    kernel_height: u32,
+    kernel_width: u32,
+    kernel: Vec<f32>,
+    img_height: u32,
+    img_width: u32,
+) -> Vec<u8> {
     let scale_factor: f32 = kernel.iter().sum();
-    
-    let kernel_height = 3;
-    let kernel_width = 3;
-    let new_height = height - kernel_height + 1;
-    let new_width = (width - kernel_width + 1) * 4;
+
+    let scale_factor = if scale_factor < 1.0 && scale_factor > -1.0 {
+        1.0
+    } else {
+        scale_factor
+    };
+
+    let new_height = img_height - kernel_height + 1;
+    let new_width = img_width - kernel_width + 1;
 
     let mut new_pixels: Vec<u8> = Vec::with_capacity((new_height * new_width) as usize);
 
-    for i in 0..new_height {
-        for j in (0..new_width).step_by(4) {
-            let base_red = i * (width * 4) + j;
-            let base_green = i * (width * 4) + j + 1;
-            let base_blue = i * (width * 4) + j + 2;
+    let kernel_vertical_offset: i32 = kernel_height as i32 / 2;
+    let kernel_horizontal_offset: i32 = kernel_width as i32 / 2;
 
-            let mut red: f32 = 0f32;
-            let mut green: f32 = 0f32;
-            let mut blue: f32 = 0f32;
+    let kernel_vertical_offset = if kernel_height % 2 == 0 {
+        (-kernel_vertical_offset..kernel_vertical_offset).collect::<Vec<i32>>()
+    } else {
+        (-kernel_vertical_offset..=kernel_vertical_offset).collect::<Vec<i32>>()
+    };
 
-            for k in (0..=8u32).step_by(4) {
-                let ki = k / 4;
-                red = red + (kernel[ki as usize] * pixels[(base_red + k) as usize] as f32);
-                green = green + (kernel[ki as usize] * pixels[(base_green + k) as usize] as f32);
-                blue = blue + (kernel[ki as usize] * pixels[(base_blue + k) as usize] as f32);
+    let kernel_horizontal_offset = if kernel_width % 2 == 0 {
+        (-kernel_horizontal_offset..kernel_horizontal_offset).collect::<Vec<i32>>()
+    } else {
+        (-kernel_horizontal_offset..=kernel_horizontal_offset).collect::<Vec<i32>>()
+    };
+
+    let mut img = vec![];
+    for i in 0..img_height {
+        let mut row = vec![];
+        for j in (0..img_width * 4).step_by(4) {
+            row.push((
+                pixels[(i * (img_width * 4) + j + 0) as usize],
+                pixels[(i * (img_width * 4) + j + 1) as usize],
+                pixels[(i * (img_width * 4) + j + 2) as usize],
+            ))
+        }
+        img.push(row);
+    }
+
+    let mut stacked_kernel = vec![];
+    for i in 0..kernel_height {
+        let mut row = vec![];
+        for j in 0..kernel_width {
+            row.push(kernel[(i * kernel_width + j) as usize] / scale_factor);
+        }
+        stacked_kernel.push(row);
+    }
+
+    let kernel = stacked_kernel;
+
+    for i in kernel_height / 2..new_height + (kernel_height / 2) {
+        for j in kernel_width / 2..new_width + (kernel_width / 2) {
+            let mut red = 0f32;
+            let mut green = 0f32;
+            let mut blue = 0f32;
+
+            for (k_row, ki) in kernel_vertical_offset.iter().enumerate() {
+                for (k_col, kj) in kernel_horizontal_offset.iter().enumerate() {
+                    let ki = *ki;
+                    let kj = *kj;
+
+                    let (r, g, b) = img[(i as i32 + ki) as usize][(j as i32 + kj) as usize];
+                    red = red + (kernel[k_row][k_col] * r as f32);
+                    green = green + (kernel[k_row][k_col] * g as f32);
+                    blue = blue + (kernel[k_row][k_col] * b as f32);
+                }
             }
-            
-            red = red / scale_factor;
-            green = green / scale_factor;
-            blue = blue / scale_factor;
-
             new_pixels.push(red as u8);
             new_pixels.push(green as u8);
             new_pixels.push(blue as u8);
-            new_pixels.push(255 as u8);
+            new_pixels.push(255u8);
         }
     }
 
@@ -772,39 +817,147 @@ pub fn ass3_compute_kernel(pixels: Vec<u8>, height: u32, width: u32, kernel: Vec
 #[derive(Serialize)]
 pub struct KernelParseResponse {
     kernel_format: String,
-    height: usize,
-    width: usize,
-    value: Vec<f32>
+    height: u32,
+    width: u32,
+    value: Vec<f32>,
+    kernel: Vec<Vec<f32>>,
+    kernelParseErrors: String,
+    kernelParseSuccessful: bool,
 }
 
 #[wasm_bindgen(js_name = ass3ParseKernel)]
-pub fn ass3_parse_kernel(text: &str) -> Result<(), JsValue> {
-    let mut errors = String::from("");
-
+pub fn ass3_parse_kernel(text: &str) -> Result<JsValue, JsValue> {
     let mut file = match FileParser::parse(Rule::KERNEL, &text) {
         Ok(val) => val,
         Err(err) => {
-            errors = format!("{}", err);
+            let errors = format!("{}", err);
             return Err(JsValue::from(errors));
         }
     };
 
-    let mut value = vec![];
+    let mut value: Vec<f32> = vec![];
+
+    let file = file // unwrap the parse result
+        .next()
+        .unwrap(); // get and unwrap the `file` rule; never fails
+
+    let mut kernel_format = String::new();
+    let mut num_closings = 0u32;
+
+    let mut widths = vec![0; 99];
 
     for val in file.into_inner() {
         match val.as_rule() {
-            Rule::WHOLE_NUMBER => {
-                let num = val.as_str().trim().parse::<usize>().unwrap();
-                let num = if num > 255 { 255u8 } else { num as u8 };
-                array.push(num)
-            }
+            Rule::KERNEL => (),
+            Rule::EOI => (),
             Rule::OPENING_SQUARE_BRACKET => (),
             Rule::CLOSING_SQUARE_BRACKET => (),
-            Rule::COMMA => (),
-            Rule::EOI => (),
-            _ => unreachable!(),
+            Rule::KERNEL_2D_ARRAY => {
+                kernel_format.push_str("2D Array");
+                for child_val in val.into_inner() {
+                    match child_val.as_rule() {
+                        Rule::OPENING_SQUARE_BRACKET => (),
+                        Rule::CLOSING_SQUARE_BRACKET => num_closings += 1,
+                        Rule::FLOATING_POINT_NUMBER => {
+                            value.push(child_val.as_str().parse::<f32>().unwrap());
+                            widths[num_closings as usize] += 1;
+                        }
+                        Rule::START_OF_NEW_ROW => (),
+                        Rule::COMMA => (),
+                        _ => {
+                            log(format!(
+                                "Should not have reached child_val {:#?}",
+                                child_val.as_rule()
+                            )
+                            .as_str());
+                            unreachable!()
+                        }
+                    }
+                }
+            }
+            Rule::SEMICOLON_SEPARATED_KERNEL => {
+                kernel_format.push_str("Semicolon Separated");
+                for child_val in val.into_inner() {
+                    match child_val.as_rule() {
+                        Rule::OPENING_SQUARE_BRACKET => (),
+                        Rule::CLOSING_SQUARE_BRACKET => (),
+                        Rule::FLOATING_POINT_NUMBER => {
+                            value.push(child_val.as_str().parse::<f32>().unwrap());
+                            widths[num_closings as usize] += 1;
+                        }
+                        Rule::START_OF_NEW_ROW => num_closings += 1,
+                        Rule::COMMA => (),
+                        _ => {
+                            log(format!(
+                                "Should not have reached child_val {:#?}",
+                                child_val.as_rule()
+                            )
+                            .as_str());
+                            unreachable!()
+                        }
+                    }
+                }
+            }
+            _ => {
+                log(format!("Should not have reached val {:#?}", val.as_rule()).as_str());
+                unreachable!()
+            }
         }
     }
-   
-    Ok(())
+
+    let height = if kernel_format == "2D Array" {
+        num_closings - 1
+    } else if kernel_format == "Semicolon Separated" {
+        num_closings + 1
+    } else {
+        log(format!("kernel_format should not be {:?}", kernel_format).as_str());
+        unreachable!()
+    };
+
+    let widths = widths
+        .iter()
+        .filter(|w| **w != 0)
+        .map(|w| *w)
+        .collect::<Vec<i32>>();
+
+    let width = widths[0] as u32;
+
+    if widths.iter().all(|w| width as i32 == *w) {
+        Ok(JsValue::from_serde(&KernelParseResponse {
+            kernel_format,
+            height,
+            width,
+            value,
+            kernel: vec![],
+            kernelParseErrors: String::from(""),
+            kernelParseSuccessful: true,
+        })
+        .unwrap())
+    } else {
+        Err(JsValue::from(format!(
+            "The width of each row respectively is {:?} - they need to all be the same.",
+            widths
+        )))
+    }
+}
+
+#[wasm_bindgen(js_name = ass3Compute)]
+pub fn ass3_parse_and_compute(
+    file_text: &str,
+    kernel_height: u32,
+    kernel_width: u32,
+    kernel: Vec<f32>,
+) -> Result<Vec<u8>, JsValue> {
+    let (header, _errs) = viewer_parse_header(file_text);
+    let pixels = viewer_parse_pixels_json(file_text)?;
+    let filtered_pixels = ass3_compute_kernel(
+        pixels,
+        kernel_height,
+        kernel_width,
+        kernel,
+        header.height as u32,
+        header.width as u32,
+    );
+
+    Ok(filtered_pixels)
 }

@@ -71,6 +71,12 @@ const mutations = {
     state.ass1.grayImgValues = values;
     state.ass1.grayImgValuesReady = true;
   },
+  ADD_ASS3_FILE_TEXT: (state, text) => {
+    state.ass3.fileText = text;
+  },
+  ADD_ASS3_KERNEL: (state, kernel) => {
+    state.ass3.kernel = kernel;
+  }
 };
 
 export default mutations;
